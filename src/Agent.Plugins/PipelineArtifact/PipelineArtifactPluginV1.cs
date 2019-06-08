@@ -201,7 +201,8 @@ namespace Agent.Plugins.PipelineArtifact
                     PipelineId = pipelineId,
                     ArtifactName = artifactName,
                     TargetDirectory = targetPath,
-                    MinimatchFilters = minimatchPatterns
+                    MinimatchFilters = minimatchPatterns,
+                    MinimatchFilterWithArtifactName = false
                 };
             }
             else if (buildType == buildTypeSpecific)
@@ -230,7 +231,8 @@ namespace Agent.Plugins.PipelineArtifact
                     PipelineId = pipelineId,
                     ArtifactName = artifactName,
                     TargetDirectory = targetPath,
-                    MinimatchFilters = minimatchPatterns
+                    MinimatchFilters = minimatchPatterns,
+                    MinimatchFilterWithArtifactName = false
                 };
             }
             else
