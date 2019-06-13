@@ -37,15 +37,15 @@ namespace Agent.Plugins.PipelineArtifact
         // Properties set by tasks
         protected static class ArtifactEventProperties
         {
-            public static readonly string BuildType = "buildType";
+            public static readonly string SourceRun = "source";
             public static readonly string Project = "project";
             public static readonly string PipelineDefinition = "pipeline";
-            public static readonly string BuildTriggering = "specificBuildWithTriggering";
-            public static readonly string BuildVersionToDownload = "buildVersionToDownload";
-            public static readonly string BranchName = "branchName";
+            public static readonly string PipelineTriggering = "preferTriggeringPipeline";
+            public static readonly string PipelineVersionToDownload = "runVersion";
+            public static readonly string BranchName = "runBranch";
             public static readonly string Tags = "tags";
-            public static readonly string ArtifactName = "artifactName";
-            public static readonly string ItemPattern = "itemPattern";
+            public static readonly string ArtifactName = "artifact";
+            public static readonly string ItemPattern = "patterns";
         }
     }
 
@@ -54,11 +54,11 @@ namespace Agent.Plugins.PipelineArtifact
     {
         // Same as https://github.com/Microsoft/vsts-tasks/blob/master/Tasks/DownloadPipelineArtifactV1/task.json
         public override Guid Id => PipelineArtifactPluginConstants.DownloadPipelineArtifactTaskId;
-        static readonly string buildTypeCurrent = "current";
-        static readonly string buildTypeSpecific = "specific";
-        static readonly string buildVersionToDownloadLatest = "latest";
-        static readonly string buildVersionToDownloadSpecific = "specific";
-        static readonly string buildVersionToDownloadLatestFromBranch = "latestFromBranch";
+        static readonly string sourceRunCurrent = "current";
+        static readonly string sourceRunSpecific = "specific";
+        static readonly string pipelineVersionToDownloadLatest = "latest";
+        static readonly string pipelineVersionToDownloadSpecific = "specific";
+        static readonly string pipelineVersionToDownloadLatestFromBranch = "latestFromBranch";
 
         protected override async Task ProcessCommandInternalAsync(
             AgentTaskPluginExecutionContext context,
@@ -68,9 +68,9 @@ namespace Agent.Plugins.PipelineArtifact
             string artifactName = context.GetInput(ArtifactEventProperties.ArtifactName, required: false);
             string branchName = context.GetInput(ArtifactEventProperties.BranchName, required: false);
             string pipelineDefinition = context.GetInput(ArtifactEventProperties.PipelineDefinition, required: false);
-            string buildType = context.GetInput(ArtifactEventProperties.BuildType, required: true);
-            string buildTriggering = context.GetInput(ArtifactEventProperties.BuildTriggering, required: false);
-            string buildVersionToDownload = context.GetInput(ArtifactEventProperties.BuildVersionToDownload, required: false);
+            string sourceRun = context.GetInput(ArtifactEventProperties.SourceRun, required: true);
+            string pipelineTriggering = context.GetInput(ArtifactEventProperties.PipelineTriggering, required: false);
+            string pipelineVersionToDownload = context.GetInput(ArtifactEventProperties.PipelineVersionToDownload, required: false);
             string targetPath = context.GetInput(DownloadPath, required: true);
             string environmentBuildId = context.Variables.GetValueOrDefault(BuildVariables.BuildId)?.Value ?? string.Empty; // BuildID provided by environment.
             string itemPattern = context.GetInput(ArtifactEventProperties.ItemPattern, required: false);
@@ -98,7 +98,7 @@ namespace Agent.Plugins.PipelineArtifact
             PipelineArtifactServer server = new PipelineArtifactServer();
             PipelineArtifactDownloadParameters downloadParameters;
 
-            if (buildType == buildTypeCurrent)
+            if (sourceRun == sourceRunCurrent)
             {
                 // TODO: use a constant for project id, which is currently defined in Microsoft.VisualStudio.Services.Agent.Constants.Variables.System.TeamProjectId (Ting)
                 string projectIdStr = context.Variables.GetValueOrDefault("system.teamProjectId")?.Value;
@@ -144,7 +144,7 @@ namespace Agent.Plugins.PipelineArtifact
                     MinimatchFilterWithArtifactName = true
                 };
             }
-            else if (buildType == buildTypeSpecific)
+            else if (sourceRun == sourceRunSpecific)
             {
                 if (String.IsNullOrEmpty(projectName))
                 {
@@ -152,17 +152,17 @@ namespace Agent.Plugins.PipelineArtifact
                 }
                 Guid projectId = Guid.Parse(projectName);
                 int pipelineId;
-                if (buildVersionToDownload == buildVersionToDownloadLatest)
+                if (pipelineVersionToDownload == pipelineVersionToDownloadLatest)
                 {
-                    pipelineId = await this.GetPipelineIdAsync(context, pipelineDefinition, buildVersionToDownload, projectName, tagsInput);
+                    pipelineId = await this.GetPipelineIdAsync(context, pipelineDefinition, pipelineVersionToDownload, projectName, tagsInput);
                 }
-                else if (buildVersionToDownload == buildVersionToDownloadSpecific)
+                else if (pipelineVersionToDownload == pipelineVersionToDownloadSpecific)
                 {
                     pipelineId = Int32.Parse(userSpecifiedpipelineId);
                 }
-                else if (buildVersionToDownload == buildVersionToDownloadLatestFromBranch)
+                else if (pipelineVersionToDownload == pipelineVersionToDownloadLatestFromBranch)
                 {
-                    pipelineId = await this.GetPipelineIdAsync(context, pipelineDefinition, buildVersionToDownload, projectName, tagsInput, branchName);
+                    pipelineId = await this.GetPipelineIdAsync(context, pipelineDefinition, pipelineVersionToDownload, projectName, tagsInput, branchName);
                 }
                 else
                 {
@@ -182,7 +182,7 @@ namespace Agent.Plugins.PipelineArtifact
             }
             else
             {
-                throw new InvalidOperationException($"Build type '{buildType}' is not recognized.");
+                throw new InvalidOperationException($"Build type '{sourceRun}' is not recognized.");
             }
 
             string fullPath = this.CreateDirectoryIfDoesntExist(targetPath);
@@ -218,17 +218,17 @@ namespace Agent.Plugins.PipelineArtifact
             return fullPath;
         }
 
-        private async Task<int> GetPipelineIdAsync(AgentTaskPluginExecutionContext context, string pipelineDefinition, string buildVersionToDownload, string project, string[] tagFilters, string branchName = null)
+        private async Task<int> GetPipelineIdAsync(AgentTaskPluginExecutionContext context, string pipelineDefinition, string pipelineVersionToDownload, string project, string[] tagFilters, string branchName = null)
         {
             var definitions = new List<int>() { Int32.Parse(pipelineDefinition) };
             VssConnection connection = context.VssConnection;
             BuildHttpClient buildHttpClient = connection.GetClient<BuildHttpClient>();
             List<Build> list;
-            if (buildVersionToDownload == "latest")
+            if (pipelineVersionToDownload == "latest")
             {
                 list = await buildHttpClient.GetBuildsAsync(project, definitions, tagFilters: tagFilters, queryOrder: BuildQueryOrder.FinishTimeDescending);
             }
-            else if (buildVersionToDownload == "latestFromBranch")
+            else if (pipelineVersionToDownload == "latestFromBranch")
             {
                 list = await buildHttpClient.GetBuildsAsync(project, definitions, branchName: branchName, tagFilters: tagFilters, queryOrder: BuildQueryOrder.FinishTimeDescending);
             }
