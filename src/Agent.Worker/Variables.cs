@@ -172,6 +172,19 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
         public string System_TFCollectionUrl => Get(WellKnownDistributedTaskVariables.TFCollectionUrl);
 
+        public string System_StageName => Get(Constants.Variables.System.StageName);
+
+        public int? System_StageAttempt => GetInt(Constants.Variables.System.StageAttempt);
+
+        public string System_PhaseName => Get(Constants.Variables.System.PhaseName);
+
+        public int? System_PhaseAttempt => GetInt(Constants.Variables.System.PhaseAttempt);
+
+        public string System_JobName => Get(Constants.Variables.System.JobName);
+
+        public int? System_JobAttempt => GetInt(Constants.Variables.System.JobAttempt);
+
+
         public static readonly HashSet<string> PiiVariables = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "Build.AuthorizeAs",
