@@ -111,6 +111,8 @@ namespace Microsoft.VisualStudio.Services.Agent
 
         public void StartClient(string socketAddress, string monitorSocketAddress)
         {
+            ConnectMonitor(monitorSocketAddress); 
+
             if (!_configured)
             {
                 try
@@ -154,8 +156,6 @@ namespace Microsoft.VisualStudio.Services.Agent
                     Trace.Error(e);
                 }
             }
-
-            ConnectMonitor(monitorSocketAddress);
         }
         
         private void StartMonitor(Guid jobId, string accessToken, Uri serverUri)
