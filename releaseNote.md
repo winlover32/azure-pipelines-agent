@@ -1,12 +1,18 @@
 ## Features
-  - Calculate artifact size for build (file container) artifacts #2258
-  - Add jobId as source for artifacts #2278
-  - Capture telemetry from PA/PC tasks #2274
-  - Create publish pipeline artifact v1 task in agent #2279
-  - Update download path so that it's relative to workingDirectory for DPA V2 task #2282
+  - Adding Pipeline Info In NoConfig runs #2269
+  - Recursively clean and reset git submodules #2302
+  - Calculate artifact size for pipeline artifacts #2289
+  - Added lineNumber while appending timeline record feed #2310
+  - Reading Environment variables and passing in RunContext #2313
   
 ## Bugs
-  - N/A
+  - Warn user of buggy Git LFS version if installed #2297
+  - Convert loginserver url to lowercase for ACR #2299
+  - Adaptive delay during automatic update #2312
+  - Changes to connect to process monitor endpoint even if socket address for agent communication endpoint is not set #2319
+  - Modifying SaveCache task to not upload files if the key exists #2308
+  - Add retries for fetching github artifact details. #2324
+  - Report last time build/release directory times as UTC time #2318
   
 ## Misc
   - N/A
