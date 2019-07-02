@@ -235,6 +235,13 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Container
                 // After mount volume variables are expanded, they are final
                 MountVolumes.Add(new MountVolume(volume));
             }
+
+            // Expand env vars
+            variables.ExpandValues(ContainerEnvironmentVariables);
+
+            // Expand image and options strings
+            ContainerImage = variables.ExpandValue(nameof(ContainerImage), ContainerImage);
+            ContainerCreateOptions = variables.ExpandValue(nameof(ContainerCreateOptions), ContainerCreateOptions);
         }
     }
 
