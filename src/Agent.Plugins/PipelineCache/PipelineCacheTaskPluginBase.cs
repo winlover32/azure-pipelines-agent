@@ -18,9 +18,9 @@ namespace Agent.Plugins.PipelineCache
 {
     public abstract class PipelineCacheTaskPluginBase : IAgentTaskPlugin
     {
-        public abstract Guid Id { get; }
+        public Guid Id => PipelineCachePluginConstants.CacheTaskId;
 
-        public string Stage => "main";
+        public abstract String Stage { get; }
 
         public async Task RunAsync(AgentTaskPluginExecutionContext context, CancellationToken token)
         {
@@ -58,7 +58,7 @@ namespace Agent.Plugins.PipelineCache
             public static readonly string Key = "key"; // this needs to match the input in the task.
             public static readonly string Path = "path";
             public static readonly string PipelineId = "pipelineId";
-            public static readonly string VariableToSetOnCacheHit = "cacheHitVar";
+            public static readonly string CacheHitVariable = "cacheHitVar";
             public static readonly string Salt = "salt";
 
         }

@@ -93,7 +93,7 @@ namespace Agent.Plugins.PipelineCache
             IEnumerable<string> key,
             string path,
             string salt,
-            string variableToSetOnHit,
+            string cacheHitVariable,
             CancellationToken cancellationToken)
         {
             VssConnection connection = context.VssConnection;
@@ -115,11 +115,7 @@ namespace Agent.Plugins.PipelineCache
                 // Send results to CustomerIntelligence
                 context.PublishTelemetry(area: PipelineArtifactConstants.AzurePipelinesAgent, feature: PipelineArtifactConstants.PipelineCache, record: cacheRecord);
 
-                if (result == null)
-                {
-                    return;
-                }
-                else
+                if (result != null)
                 {
                     context.Output($"Manifest ID is: {result.ManifestId.ValueString}");
                     PipelineCacheActionRecord downloadRecord = clientTelemetry.CreateRecord<PipelineCacheActionRecord>((level, uri, type) =>
@@ -134,11 +130,12 @@ namespace Agent.Plugins.PipelineCache
                     // Send results to CustomerIntelligence
                     context.PublishTelemetry(area: PipelineArtifactConstants.AzurePipelinesAgent, feature: PipelineArtifactConstants.PipelineCache, record: downloadRecord);
                     
-                    if (!string.IsNullOrEmpty(variableToSetOnHit))
-                    {
-                        context.SetVariable($"{PipelineArtifactConstants.PipelineCache}.{variableToSetOnHit}", "True");
-                    }
-                    Console.WriteLine("Cache restored.");
+                    context.Output("Cache restored.");
+                }
+
+                if (!string.IsNullOrEmpty(cacheHitVariable))
+                {
+                    context.SetVariable(cacheHitVariable, result != null ? "true" : "false");
                 }
             }
         }

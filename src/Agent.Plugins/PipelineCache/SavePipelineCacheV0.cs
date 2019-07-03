@@ -1,26 +1,14 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 using Agent.Sdk;
-using Microsoft.TeamFoundation.Build.WebApi;
 using Microsoft.TeamFoundation.DistributedTask.WebApi;
-using Microsoft.VisualStudio.Services.Agent.Util;
-using Microsoft.VisualStudio.Services.BlobStore.Common;
-using Microsoft.VisualStudio.Services.BlobStore.WebApi;
-using Microsoft.VisualStudio.Services.Common;
-using Microsoft.VisualStudio.Services.Content.Common.Tracing;
-using Microsoft.VisualStudio.Services.PipelineCache.WebApi;
-using Microsoft.VisualStudio.Services.WebApi;
-using Newtonsoft.Json;
 
 namespace Agent.Plugins.PipelineCache
 {    
     public class SavePipelineCacheV0 : PipelineCacheTaskPluginBase
     {
-        public override Guid Id => PipelineCachePluginConstants.SaveCacheTaskId;
+        public override string Stage => "post";
 
         protected override async Task ProcessCommandInternalAsync(
             AgentTaskPluginExecutionContext context, 
@@ -29,6 +17,21 @@ namespace Agent.Plugins.PipelineCache
             string salt,
             CancellationToken token)
         {
+            TaskResult? jobStatus = null;
+            if (context.Variables.TryGetValue("agent.jobstatus", out VariableValue jobStatusVar))
+            {
+                if (Enum.TryParse<TaskResult>(jobStatusVar?.Value ?? string.Empty, true, out TaskResult result))
+                {
+                    jobStatus = result;
+                }
+            }
+
+            if (!TaskResult.Succeeded.Equals(jobStatus))
+            {
+                context.Warning($"Skipping because the job status was not 'Succeeded'.");
+                return;
+            }
+
             string[] key = keyStr.Split(
                 new[] { '\n' },
                 StringSplitOptions.RemoveEmptyEntries
