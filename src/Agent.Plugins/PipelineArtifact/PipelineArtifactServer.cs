@@ -29,13 +29,14 @@ namespace Agent.Plugins.PipelineArtifact
         {
             VssConnection connection = context.VssConnection;
             BlobStoreClientTelemetry clientTelemetry;
-            DedupManifestArtifactClient dedupManifestClient = DedupManifestArtifactClientFactory.CreateDedupManifestClient(context, connection, out clientTelemetry);
+            DedupManifestArtifactClient dedupManifestClient = DedupManifestArtifactClientFactory.CreateDedupManifestClient(context, connection, cancellationToken, out clientTelemetry);
 
             using (clientTelemetry)
             {
                 //Upload the pipeline artifact.
                 PipelineArtifactActionRecord uploadRecord = clientTelemetry.CreateRecord<PipelineArtifactActionRecord>((level, uri, type) =>
                     new PipelineArtifactActionRecord(level, uri, type, nameof(UploadAsync), context));
+                    
                 PublishResult result = await clientTelemetry.MeasureActionAsync(
                     record: uploadRecord,
                     actionAsync: async () =>
@@ -88,7 +89,7 @@ namespace Agent.Plugins.PipelineArtifact
         {
             VssConnection connection = context.VssConnection;
             BlobStoreClientTelemetry clientTelemetry;
-            DedupManifestArtifactClient dedupManifestClient = DedupManifestArtifactClientFactory.CreateDedupManifestClient(context, connection, out clientTelemetry);
+            DedupManifestArtifactClient dedupManifestClient = DedupManifestArtifactClientFactory.CreateDedupManifestClient(context, connection, cancellationToken, out clientTelemetry);
             BuildServer buildHelper = new BuildServer(connection);
 
             using (clientTelemetry)
