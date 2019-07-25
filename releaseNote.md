@@ -1,21 +1,13 @@
 ## Features
-  - Adding Pipeline Info In NoConfig runs #2269
-  - Recursively clean and reset git submodules #2302
-  - Calculate artifact size for pipeline artifacts #2289
-  - Added lineNumber while appending timeline record feed #2310
-  - Reading Environment variables and passing in RunContext #2313
+  - Pipeline Caching CacheBeta 1.0 agent changes #2358
   
 ## Bugs
-  - Warn user of buggy Git LFS version if installed #2297
-  - Convert loginserver url to lowercase for ACR #2299
-  - Adaptive delay during automatic update #2312
-  - Changes to connect to process monitor endpoint even if socket address for agent communication endpoint is not set #2319
-  - Modifying SaveCache task to not upload files if the key exists #2308
-  - Add retries for fetching github artifact details. #2324
-  - Report last time build/release directory times as UTC time #2318
-  
+  - Getting the latest successful build instead of latest in DPA #2350
+  - Pass through parameters to listener #2353 
+  - Use ArtifactHttpClientFactory to generate dedupStoreClient that includes ArtifactHttpRetryHandler #2357
+
 ## Misc
-  - N/A
+  - Use Azure Artifacts for nugetvssprivate #2359
 
 ## Agent Downloads  
 

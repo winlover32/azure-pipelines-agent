@@ -181,6 +181,7 @@ stages:
           externals\node10\bin\node.exe
           externals\vstshost\Minimatch.dll
           externals\vstsom\Newtonsoft.Json.dll
+          externals\tf\Newtonsoft.Json.dll
         UseMinimatch: true
         signConfigType: inlineSignParams
         inlineOperation: |
@@ -427,6 +428,7 @@ stages:
           externals\node10\bin\node.exe
           externals\vstshost\Minimatch.dll
           externals\vstsom\Newtonsoft.Json.dll
+          externals\tf\Newtonsoft.Json.dll
         UseMinimatch: true
         signConfigType: inlineSignParams
         inlineOperation: |
