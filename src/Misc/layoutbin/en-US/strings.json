@@ -296,6 +296,10 @@
   "FileUploadSucceed": "File upload succeed.",
   "FinalizeJob": "Finalize Job",
   "FinishMaintenance": "Maintenance finished: {0}",
+  "FoundErrorInTrace": [
+    "{0} reported in diagnostic logs. Please examine the log for more details.",
+    "    - {1}"
+  ],
   "GCBuildDir": "Delete orphan and stale build directory.",
   "GCBuildDirNotEnabled": "Delete orphan and stale build directory option is not enabled.",
   "GCDirIsEmpty": "No build directory need to be GC. '{0}' doesn't have any tracking file.",
