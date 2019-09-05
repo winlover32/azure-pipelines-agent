@@ -5,13 +5,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.TeamFoundation.Build.WebApi;
-using Microsoft.TeamFoundation.Core.WebApi;
-using Microsoft.VisualStudio.Services.BlobStore.Common;
-using Microsoft.VisualStudio.Services.Content.Common.Tracing;
-using Microsoft.VisualStudio.Services.BlobStore.WebApi;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
-using Microsoft.TeamFoundation.DistributedTask.WebApi;
 using Microsoft.VisualStudio.Services.Agent.Util;
 using Agent.Sdk;
 
@@ -80,8 +75,9 @@ namespace Agent.Plugins.PipelineArtifact
             string defaultWorkingDirectory = context.Variables.GetValueOrDefault("system.defaultworkingdirectory").Value;
 
             targetPath = Path.IsPathFullyQualified(targetPath) ? targetPath : Path.GetFullPath(Path.Combine(defaultWorkingDirectory, targetPath));
-            
-            if(!PipelineArtifactPathHelper.IsValidArtifactName(artifactName)) {
+
+            if(!PipelineArtifactPathHelper.IsValidArtifactName(artifactName)) 
+            {
                 throw new ArgumentException(StringUtil.Loc("ArtifactNameIsNotValid", artifactName));
             }
 
@@ -120,7 +116,7 @@ namespace Agent.Plugins.PipelineArtifact
                     if (string.Equals(hostType, "Release", StringComparison.OrdinalIgnoreCase) ||
                         string.Equals(hostType, "DeploymentGroup", StringComparison.OrdinalIgnoreCase))
                     {
-                        throw new InvalidOperationException(StringUtil.Loc("BuildIdIsNotAvailable", hostType ?? string.Empty));
+                        throw new InvalidOperationException(StringUtil.Loc("BuildIdIsNotAvailable", hostType ?? string.Empty, hostType ?? string.Empty));
                     }
                     else if (!string.Equals(hostType, "Build", StringComparison.OrdinalIgnoreCase))
                     {
