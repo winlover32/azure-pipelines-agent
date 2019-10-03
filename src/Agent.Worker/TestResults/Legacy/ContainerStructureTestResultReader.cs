@@ -3,8 +3,9 @@ using Microsoft.VisualStudio.Services.Agent.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using TestRunContext = Microsoft.TeamFoundation.TestClient.PublishTestResults.TestRunContext;
 
-namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
+namespace Microsoft.VisualStudio.Services.Agent.Worker.LegacyTestResults
 {
     /// <summary>
     /// Reads result output from google container strucutre test.
