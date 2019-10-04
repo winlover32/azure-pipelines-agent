@@ -74,6 +74,8 @@ namespace Microsoft.VisualStudio.Services.Agent
                     public static readonly string DeploymentGroupName = "deploymentgroupname";
                     public static readonly string DeploymentPoolName = "deploymentpoolname";
                     public static readonly string DeploymentGroupTags = "deploymentgrouptags";
+                    public static readonly string EnvironmentName = "environmentname";
+                    public static readonly string EnvironmentVMResourceTags = "virtualmachineresourcetags";
                     public static readonly string MachineGroupName = "machinegroupname";
                     public static readonly string MachineGroupTags = "machinegrouptags";
                     public static readonly string Matrix = "matrix";
@@ -128,9 +130,11 @@ namespace Microsoft.VisualStudio.Services.Agent
                     public static readonly string AcceptTeeEula = "acceptteeeula";
                     public static readonly string AddDeploymentGroupTags = "adddeploymentgrouptags";
                     public static readonly string AddMachineGroupTags = "addmachinegrouptags";
+                    public static readonly string AddEnvironmentVirtualMachineResourceTags = "addvirtualmachineresourcetags";
                     public static readonly string Commit = "commit";
                     public static readonly string DeploymentGroup = "deploymentgroup";
                     public static readonly string DeploymentPool = "deploymentpool";
+                    public static readonly string Environment = "environment";
                     public static readonly string OverwriteAutoLogon = "overwriteautologon";
                     public static readonly string GitUseSChannel = "gituseschannel";
                     public static readonly string Help = "help";
@@ -162,6 +166,7 @@ namespace Microsoft.VisualStudio.Services.Agent
                 public static readonly string BuildReleasesAgentConfiguration = "BuildReleasesAgentConfiguration";
                 public static readonly string DeploymentAgentConfiguration = "DeploymentAgentConfiguration";
                 public static readonly string SharedDeploymentAgentConfiguration = "SharedDeploymentAgentConfiguration";
+                public static readonly string EnvironmentVMResourceConfiguration = "EnvironmentVMResourceConfiguration";
             }
         }
 

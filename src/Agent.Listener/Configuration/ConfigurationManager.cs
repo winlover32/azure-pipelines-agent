@@ -182,6 +182,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
             {
                 agentType = Constants.Agent.AgentConfigurationProvider.SharedDeploymentAgentConfiguration;
             }
+            else if (command.EnvironmentVMResource)
+            {
+                agentType = Constants.Agent.AgentConfigurationProvider.EnvironmentVMResourceConfiguration;
+            }
             else
             {
                 agentType = Constants.Agent.AgentConfigurationProvider.BuildReleasesAgentConfiguration;
@@ -292,7 +296,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                 }
                 else
                 {
-                    // Create a new agent. 
+                    // Create a new agent.
                     agent = CreateNewAgent(agentSettings.AgentName, publicKey, systemCapabilities);
 
                     try
@@ -529,12 +533,19 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
                     VssCredentials creds = credProvider.GetVssCredentials(HostContext);
                     Trace.Info("cred retrieved");
 
+                    bool isEnvironmentVMResource = false;
                     bool isDeploymentGroup = (settings.MachineGroupId > 0) || (settings.DeploymentGroupId > 0);
+                    if(!isDeploymentGroup)
+                    {
+                        isEnvironmentVMResource = settings.EnvironmentId > 0;
+                    }
 
                     Trace.Info("Agent configured for deploymentGroup : {0}", isDeploymentGroup.ToString());
 
                     string agentType = isDeploymentGroup
                    ? Constants.Agent.AgentConfigurationProvider.DeploymentAgentConfiguration
+                   : isEnvironmentVMResource 
+                   ? Constants.Agent.AgentConfigurationProvider.EnvironmentVMResourceConfiguration 
                    : Constants.Agent.AgentConfigurationProvider.BuildReleasesAgentConfiguration;
 
                     var extensionManager = HostContext.GetService<IExtensionManager>();
