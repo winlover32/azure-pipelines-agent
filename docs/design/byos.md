@@ -1,13 +1,13 @@
-# Elastic Private Agent Pools (formerly "BYOS: Bring Your Own Subscription Agent Pools")
+# Elastic Self-hosted Agent Pools (formerly "BYOS: Bring Your Own Subscription Agent Pools")
 
-Hosted agents are extremely convenient: low/no cost, no infrastructure to maintain, and elastic with demand.
+Mcrosoft-hosted agents are extremely convenient: low/no cost, no infrastructure to maintain, and elastic with demand.
 In return, customers must give up control over tools, capacity, and speed.
-On the other end of the spectrum, private agents offer the exact opposite set of trade-offs: full control over everything, at the expense of maintaining and paying for infrastructure.
-With private agents, elasticity is difficult to achieve.
+On the other end of the spectrum, self-hosted agents offer the exact opposite set of trade-offs: full control over everything, at the expense of maintaining and paying for infrastructure.
+With self-hosted agents, elasticity is difficult to achieve.
 
-Bring Your Own Subscription (BYOS) represents a middle ground:
-it pairs the convenience and elastic capacity of the hosted pool with the control and flexibility of private agents.
-**Azure Pipelines will manage a set of build/release agents to the customer's specification, completely automated, in the customer's Azure subscription.**
+Elastic self-hosted pools represent a middle ground:
+they pair the convenience and elastic capacity of the Microsoft-hosted pool with the control and flexibility of self-hosted agents.
+**Azure Pipelines will manage agents to the customer's specification, completely automated, in the customer's Azure subscription.**
 
 ## State of this spec
 
@@ -15,21 +15,24 @@ This is in the early design phase and we are looking for feedback in the PR (or 
 
 ## Customer scenarios
 
-The theme throughout these scenarios is that the customer wants hosted elasticity but customization beyond what Hosted offers.
+The theme throughout these scenarios is that the customer wants hosted elasticity but customization beyond what Microsoft-hosted offers.
 
 General themes are around:
 - VM specs (memory, CPU, disk) and network environment
 - Preinstalled software
-- Agent reuse
-- On-premises customers have often asked us for access to the Hosted pools.
+- Agent lifecycle
+- Auto-scaling
+- On-premises customers have often asked us for access to the Microsoft-hosted pools.
 In lieu of that (which complicates billing and technical design), this feature must be available to Azure DevOps Server customers.
 
 ### VM specs and environment
 
 1. Customer wants more memory, more processor, or more IO than our native images.
 2. [Customer](https://github.com/MicrosoftDocs/vsts-docs/issues/2985) wants an NCv2 VM with particular instruction sets for machine learning. (It's niche enough that we won't stand up dedicated hosted pools, but broad enough to be very interesting for our business.)
-3. Customer wants additional storage attached to the VM. *(Real scenario from a medium-sized customer)*
-4. Customer wants to deploy to a private App Service. It's in a private VNET with no inbound connectivity. Today, this customer is forced to keep private agents standing by.
+3. Customer wants additional storage attached to the VM.
+4. Customer wants to deploy to a private App Service. It's in a private VNET with no inbound connectivity.
+5. Customer wants to open corporate firewall to specific IP addresses so that Microsoft-hosted agents can communicate with their servers. The IP address range for Microsoft-hosted agents changes every week.
+6. Customer wants to restrict network connectivity of agent machines and allow them to reach only approved sites.
 
 ### Preinstalled software
 
@@ -37,16 +40,22 @@ In lieu of that (which complicates billing and technical design), this feature m
 2. Customer wants to pin a specific set of tools and dependencies, preconfigured on the image.
 3. Customer wants extreme control over the exact OS build, settings, versions, and so on.
 
-### Agent reuse
+### Agent lifecycle
 
 1. Customer wants to run several consecutive jobs on an agent to take advantage of incremental source and machine-level package caches.
-They want to specify minimum and maximum # of agents associated with time ranges or # of builds, but reuse agents within that span.
-This can save money by not running unnecessary VMs overnight when there's no load.
-It can also increase reliability: we're aware of customers who need to blow away agents once every N builds (or after certain kinds of tests) because the accumulated "detritus" makes subsequent builds flaky.
-3. Customer wants to run additional configuration or cache warmup before an agent beings accepting jobs.
-As additional agents are spun up, the customer has an opportunity to run a prep script that doesn't impact "pipeline runtime".
-This is akin to the hosted pool's provisioner script.
-_While it's really nice to have, we could imagine shipping without it._
+2. Customer wants to recycle agent machines every night or after every N jobs to clean up the accumulated "detritus" and reduce flakiness in build.
+3. Customer uses agents to build untrusted code and hence wants to recycle the agent after every job.
+4. Customer wants to run a cleanup script after every job instead of a full-blown recycle.
+5. Customer wants to run additional configuration or cache warmup before an agent beings accepting jobs.
+6. Customer wants to keep the agent machines for some time after a failure in order to debug the failure.
+
+### Auto-scaling
+
+1. Customer wants to de-provision agents machines that are not being used for running jobs.
+1. At the same time, customer does not want us to wait to provision new agents until after a job has been scheduled. Customer wants to get this flexibility by setting some limits:
+   - Minimum number of idle machines (to ensure that there are machines readily available to service new jobs as they arrive).
+   - Maximum number of machines (to ensure that we do not exceed the max budget constraints).
+1. Customer wants to set different limits for different times in the day to handle peak and off-peak loads.
 
 ### On-premises customers
 
@@ -56,7 +65,7 @@ _While it's really nice to have, we could imagine shipping without it._
 
 Similar problem spaces:
 - [Jenkins can use Azure agents](https://docs.microsoft.com/en-us/azure/jenkins/jenkins-azure-vm-agents) this way
-- [AppVeyor](https://www.appveyor.com/docs/enterprise/running-builds-on-azure/) offers instructions for solving a similar problem on several cloud providers
+- [AppVeyor](https://www.appveyor.com/docs/server/running-builds-on-azure/) offers instructions for solving a similar problem on several cloud providers
 - GitLab CI/CD offers auto-scaling of builder containers using [Docker Machine](https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/configuration/autoscale.md) or [Kubernetes](https://docs.gitlab.com/runner/executors/kubernetes.html).
 
 Not offered:
@@ -66,78 +75,39 @@ Not offered:
 ## Solution
 
 For starters, this is about running agents on VMs in Azure.
-Primarily VM scale sets.
 Later, we may consider whether this same solution works for:
 - AKS
 - Any Kubernetes
 - Other clouds
 
-Under the hood, we need an image, an ARM template, an Azure subscription, and instructions about how much capacity to provision.
-That doesn't require us to expose the full complexity of ARM templates and Azure subscriptions to every customer.
+### VM scale sets
+
+The mechanism under the hood being considered for managing virtual machines in Azure is VM scale sets (VMSS). 
+
+[VM scale sets](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/overview) has the following benefits:
+
+•	Easy to create and manage a large number of virtual machines with the same base OS image and configuration.
+•	Customer can pick one of the standard images, create their own [custom image](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/tutorial-use-custom-image-cli), or install their own software on top of a standard image using [script extensions](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/tutorial-install-apps-cli).
+•	Customer can pick a [size](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes?toc=https%3A%2F%2Fdocs.microsoft.com%2Fen-us%2Fazure%2Fvirtual-machine-scale-sets%2FTOC.json&bc=https%3A%2F%2Fdocs.microsoft.com%2Fen-us%2Fazure%2Fbread%2Ftoc.json) for their virtual machines.
+•	Customer can use [availability zones](https://docs.microsoft.com/en-us/azure/availability-zones/az-overview) to distribute VM instances in a scale set across multiple data centers.
+•	Customer can configure [networking](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-networking) for VMs in their scale set.
+•	Customer can schedule automatic [OS image updates](https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-automatic-upgrade).
+•	Customer can use standard Azure policies to control various settings in the scale set.
+•	Azure Pipelines can easily grow or shrink the number of virtual machines in the scale set.
+
+Azure has a good [marketplace](https://azuremarketplace.microsoft.com/en-us/marketplace/apps?filters=virtual-machine-images) of images that customers can start with for their base images. These include Windows Server, Ubuntu, Debian based images, Windows server with Visual Studio, etc.
+In addition, we will publish our Microsoft-hosted images to this marketplace.
 
 ### Setup
 
 For a lot of customers, it would be enough to have them
 - go to pool setup
-- create a new pool of type "Custom Azure-hosted" (name t.b.d.)
-- pick one of a few different Azure VM SKUs + a few different agent lifetime policies
-- pick their Azure subscription
+- create a new pool, and select the option to use Azure VMs
+- pick an Azure subscription, a VM scale set + a few different agent lifetime policies
 - have Azure Pipelines configure it all for them
 
-For the advanced customer who really needs all the customization available, they'll switch to actually giving us the ARM template and so on.
+Some initial conceptual designs:
 
-_TODO_: draw pictures
+![BYOS1](res/byos1.png)
 
-### Infrastructure problems
-
-_TODO_: How will we let the adminstrator know of any problems that occur?
-Azure Portal will report things, but the leading indicator is probably "my builds aren't running".
-
-## Alternatives considered
-
-### Custom / configurable SKU
-
-Offering additional Azure SKUs in Hosted will meet some of the above scenarios.
-Specifically, if all you need are additional resources (memory, compute, etc.), then a custom SKU works.
-
-Pros:
-- Easiest for the customer to understand
-- Potential business model around premium SKUs
-
-Cons:
-- Capacity planning and buildout becomes a lot more complex
-- If a customer wants a SKU we don't offer, they're out of luck until we add it
-- Does not offer custom elasticity, network environment, or image
-
-### Bring your own cloud (pool providers)
-
-Putting the entire agent alloc/release cycle in the hands of the customer offers them ultimate flexibility.
-
-Pros:
-- Maximum flexibility
-- Customer can select other infrastructure: on-prem, in a different hosting provider, etc.
-
-Cons:
-- Much heavier burden to understand, set up, and maintain
-- Customer has to swallow full complexity load to get any flexibility
-
-<!--
-older section
-## Goals
-
-- **Fully automated dedicated agents with elasticity**: User configures contraints and we provision, start and stop the agents.
-- **Customer control of image and toolsets**: Pick the image to use.  Stay on it until you change the configuration.  Use our published images that we release monthly.
-- **Control machine configurations**: User can provide VM SKU and other configuration options (provide ARM).
-- **Control agent lifetime**: Agents can be single use, or thrown away on a configured interval (nightly, etc).
-- **Incremental sources and packages**: Even if you choose single use, we can warm up YAML run when bringing VM online. 
-- **Cached container images on host**: Ensure a set of container images are cached on the host via warmup YAML.
-- **Maintenance**: Schedule maintenance jobs for pruning repos, OS security updates, etc.
-- **Elastic pools for VSTS and On-prem**:  Use elastic Azure compute as build resources for VSTS but also on-prem TFS.
-- **Allow domain joined and on-prem file shares**: Leverage AAD and Express Routes for elastic on-prem scenarios.
-- **Configure multiple pools of type BYOS**: Allows for budgeting of resources across larger enterprise teams.
-- **Control costs**: Stop agents when not in use to control Azure charges
-
-## Design
-
-Pending on goals discussions.
--->
+![BYOS2](res/byos2.png)
