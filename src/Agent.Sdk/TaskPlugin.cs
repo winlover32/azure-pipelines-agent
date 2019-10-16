@@ -23,6 +23,11 @@ namespace Agent.Sdk
         Task RunAsync(AgentTaskPluginExecutionContext executionContext, CancellationToken token);
     }
 
+    public class WellKnownJobSettings
+    {
+        public static readonly string HasMultipleCheckouts = "HasMultipleCheckouts";
+    }
+
     public class AgentTaskPluginExecutionContext : ITraceWriter
     {
         private VssConnection _connection;
@@ -48,6 +53,7 @@ namespace Agent.Sdk
         public Dictionary<string, VariableValue> Variables { get; set; }
         public Dictionary<string, VariableValue> TaskVariables { get; set; }
         public Dictionary<string, string> Inputs { get; set; }
+        public Dictionary<string, string> JobSettings { get; set; }
 
         [JsonIgnore]
         public VssConnection VssConnection
@@ -114,6 +120,7 @@ namespace Agent.Sdk
             ArgUtil.NotNull(credentials, nameof(credentials));
             return VssUtil.CreateConnection(systemConnection.Url, credentials);
         }
+
         public string GetInput(string name, bool required = false)
         {
             string value = null;

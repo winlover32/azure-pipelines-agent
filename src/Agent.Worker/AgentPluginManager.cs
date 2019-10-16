@@ -161,8 +161,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             {
                 Inputs = inputs,
                 Repositories = context.Repositories,
-                Endpoints = context.Endpoints
+                Endpoints = context.Endpoints,
+                JobSettings = context.JobSettings,
             };
+
             // variables
             foreach (var publicVar in runtimeVariables.Public)
             {
