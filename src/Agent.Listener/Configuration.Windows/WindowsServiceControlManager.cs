@@ -1,4 +1,3 @@
-#if OS_WINDOWS
 using System;
 using System.IO;
 using System.Linq;
@@ -9,6 +8,14 @@ using Microsoft.VisualStudio.Services.Agent.Util;
 
 namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
 {
+    [ServiceLocator(Default = typeof(WindowsServiceControlManager))]
+    public interface IWindowsServiceControlManager : IAgentService
+    {
+        void ConfigureService(AgentSettings settings, CommandSettings command);
+
+        void UnconfigureService();
+    }
+
     public class WindowsServiceControlManager : ServiceControlManager, IWindowsServiceControlManager
     {
         public const string WindowsServiceControllerName = "AgentService.exe";
@@ -177,4 +184,3 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener.Configuration
         }
     }
 }
-#endif
