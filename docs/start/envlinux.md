@@ -1,6 +1,6 @@
 
 
-# ![Linux](../res/linux_med.png) Linux System Prerequisites [2.125.0 or above]
+# ![Linux](../res/linux_med.png) Linux System Prerequisites
 
 ## Supported Distributions and Versions
 
