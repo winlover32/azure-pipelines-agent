@@ -162,6 +162,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 Inputs = inputs,
                 Repositories = context.Repositories,
                 Endpoints = context.Endpoints,
+                Container = context.Container,
                 JobSettings = context.JobSettings,
             };
 
