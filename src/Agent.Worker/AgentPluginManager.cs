@@ -167,23 +167,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             };
 
             // variables
-            foreach (var publicVar in runtimeVariables.Public)
-            {
-                pluginContext.Variables[publicVar.Key] = publicVar.Value;
-            }
-            foreach (var publicVar in runtimeVariables.Private)
-            {
-                pluginContext.Variables[publicVar.Key] = new VariableValue(publicVar.Value, true);
-            }
-            // task variables (used by wrapper task)
-            foreach (var publicVar in context.TaskVariables.Public)
-            {
-                pluginContext.TaskVariables[publicVar.Key] = publicVar.Value;
-            }
-            foreach (var publicVar in context.TaskVariables.Private)
-            {
-                pluginContext.TaskVariables[publicVar.Key] = new VariableValue(publicVar.Value, true);
-            }
+            runtimeVariables.CopyInto(pluginContext.Variables);
+            context.TaskVariables.CopyInto(pluginContext.TaskVariables);
 
             using (var processInvoker = HostContext.CreateService<IProcessInvoker>())
             {
@@ -230,14 +215,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 Endpoints = context.Endpoints,
             };
             // variables
-            foreach (var publicVar in context.Variables.Public)
-            {
-                pluginContext.Variables[publicVar.Key] = publicVar.Value;
-            }
-            foreach (var publicVar in context.Variables.Private)
-            {
-                pluginContext.Variables[publicVar.Key] = new VariableValue(publicVar.Value, true);
-            }
+            context.Variables.CopyInto(pluginContext.Variables);
 
             var commandContext = HostContext.CreateService<IAsyncCommandContext>();
             commandContext.InitializeCommandContext(context, plugin.DisplayName);
