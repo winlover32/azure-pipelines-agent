@@ -1,3 +1,4 @@
+using Agent.Sdk;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -6,7 +7,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
-using Agent.Sdk;
 using Microsoft.VisualStudio.Services.Agent.Worker.Container;
 using Microsoft.VisualStudio.Services.WebApi;
 using Microsoft.TeamFoundation.DistributedTask.WebApi;
@@ -504,12 +504,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             var runtimeOptions = HostContext.GetService<IConfigurationStore>().GetAgentRuntimeOptions();
             if (runtimeOptions != null)
             {
-#if OS_WINDOWS
-                if (runtimeOptions.GitUseSecureChannel)
+                if (PlatformUtil.RunningOnWindows && runtimeOptions.GitUseSecureChannel)
                 {
                     Variables.Set(Constants.Variables.Agent.GitUseSChannel, runtimeOptions.GitUseSecureChannel.ToString());
                 }
-#endif                
             }
 
             // Job timeline record.
