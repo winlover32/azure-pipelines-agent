@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-﻿namespace Microsoft.VisualStudio.Services.Agent.Worker.Release.ContainerFetchEngine
+namespace Microsoft.VisualStudio.Services.Agent.Worker.Release.ContainerFetchEngine
 {
     public class NullExecutionLogger : IConatinerFetchEngineLogger
     {

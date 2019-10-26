@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-﻿namespace Microsoft.VisualStudio.Services.Agent.Worker.CodeCoverage
+namespace Microsoft.VisualStudio.Services.Agent.Worker.CodeCoverage
 {
     public static class CodeCoverageConstants
     {

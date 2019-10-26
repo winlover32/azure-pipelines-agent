@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-﻿using Agent.Plugins.Log.TestResultParser.Contracts;
+using Agent.Plugins.Log.TestResultParser.Contracts;
 
 namespace Agent.Plugins.Log.TestFilePublisher
 {

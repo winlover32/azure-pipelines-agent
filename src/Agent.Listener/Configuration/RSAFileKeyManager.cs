@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-﻿using System;
+using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Threading;

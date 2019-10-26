@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-﻿using Microsoft.VisualStudio.Services.Agent.Util;
+using Microsoft.VisualStudio.Services.Agent.Util;
 using Microsoft.VisualStudio.Services.CustomerIntelligence.WebApi;
 using Microsoft.VisualStudio.Services.WebApi;
 using Microsoft.VisualStudio.Services.WebPlatform;

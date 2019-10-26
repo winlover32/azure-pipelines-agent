@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-﻿using Microsoft.TeamFoundation.TestClient.PublishTestResults;
+using Microsoft.TeamFoundation.TestClient.PublishTestResults;
 using Microsoft.TeamFoundation.TestManagement.WebApi;
 
 namespace Agent.Plugins.Log.TestFilePublisher

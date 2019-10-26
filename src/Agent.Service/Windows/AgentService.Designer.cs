@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-﻿namespace AgentService
+namespace AgentService
 {
     partial class AgentService
     {

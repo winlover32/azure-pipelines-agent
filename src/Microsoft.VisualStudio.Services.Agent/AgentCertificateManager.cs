@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-﻿using System;
+using System;
 using Microsoft.VisualStudio.Services.Agent.Util;
 using System.IO;
 using System.Runtime.Serialization;

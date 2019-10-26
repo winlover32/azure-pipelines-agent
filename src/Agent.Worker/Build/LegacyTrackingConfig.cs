@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-﻿using System;
+using System;
 using Newtonsoft.Json;
 
 namespace Microsoft.VisualStudio.Services.Agent.Worker.Build

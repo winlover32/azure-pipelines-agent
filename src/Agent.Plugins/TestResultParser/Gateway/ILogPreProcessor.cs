@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-﻿namespace Agent.Plugins.Log.TestResultParser.Plugin
+namespace Agent.Plugins.Log.TestResultParser.Plugin
 {
     public interface ILogPreProcessor
     {

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-﻿using System.IO;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.VisualStudio.Services.Agent.Util;

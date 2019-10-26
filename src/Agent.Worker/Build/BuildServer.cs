@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-﻿using Microsoft.TeamFoundation.Core.WebApi;
+using Microsoft.TeamFoundation.Core.WebApi;
 using Microsoft.VisualStudio.Services.Agent.Util;
 using System;
 using System.Collections.Generic;

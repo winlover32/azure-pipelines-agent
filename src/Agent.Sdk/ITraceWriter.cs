@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-﻿namespace Agent.Sdk
+namespace Agent.Sdk
 {
     public interface ITraceWriter
     {
