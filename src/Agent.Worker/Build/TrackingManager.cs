@@ -2,14 +2,12 @@
 // Licensed under the MIT License.
 
 using Agent.Sdk;
-using Microsoft.TeamFoundation.DistributedTask.WebApi;
 using Microsoft.VisualStudio.Services.Agent.Util;
 using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Globalization;
 using Microsoft.TeamFoundation.DistributedTask.Pipelines;
 using Microsoft.VisualStudio.Services.Common;

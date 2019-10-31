@@ -283,7 +283,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests
                     };
                     try
                     {
-                        var proc = await processInvoker.ExecuteAsync("", "bash", "-c \"cat /proc/$$/oom_score_adj\"", 
+                        var proc = await processInvoker.ExecuteAsync("", "bash", "-c \"cat /proc/$$/oom_score_adj\"",
                                                                 new Dictionary<string, string> { {"PIPELINE_JOB_OOMSCOREADJ", "1234"} },
                                                                 false, null, false, null, false, false,
                                                                 highPriorityProcess: false,
