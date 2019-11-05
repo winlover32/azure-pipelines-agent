@@ -298,13 +298,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 throw new Exception($"Name contain invalid characters. ({String.Join(", ", s_invalidFileChars)})");
             }
 
-            string filePath = data;
-            if (context.Container != null)
-            {
-                // Translate file path back from container path
-                filePath = context.Container.TranslateToHostPath(filePath);
-            }
-
+            // Translate file path back from container path
+            string filePath = context.TranslateToHostPath(data);
+            
             if (!String.IsNullOrEmpty(filePath) && File.Exists(filePath))
             {
                 // Upload attachment
@@ -369,12 +365,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                 if (extension != null)
                 {
-                    if (context.Container != null)
-                    {
-                        // Translate file path back from container path
-                        sourcePath = context.Container.TranslateToHostPath(sourcePath);
-                        properties[ProjectIssueProperties.SourcePath] = sourcePath;
-                    }
+                    // Translate file path back from container path
+                    sourcePath = context.TranslateToHostPath(sourcePath);
+                    properties[ProjectIssueProperties.SourcePath] = sourcePath;
 
                     // Get the values that represent the server path given a local path
                     string repoName;

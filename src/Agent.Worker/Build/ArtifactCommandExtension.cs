@@ -156,12 +156,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
 
             var propertyDictionary = ArtifactCommandExtensionUtil.ExtractArtifactProperties(eventProperties);
 
-            string localPath = data;
-            if (context.Container != null)
-            {
-                // Translate file path back from container path
-                localPath = context.Container.TranslateToHostPath(localPath);
-            }
+            // Translate file path back from container path
+            string localPath = context.TranslateToHostPath(data);
 
             if (string.IsNullOrEmpty(localPath))
             {

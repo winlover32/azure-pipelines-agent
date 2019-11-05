@@ -145,12 +145,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
             // Set the repo variables.
             if (!string.IsNullOrEmpty(repoInfo.Repository.Id)) // TODO: Move to const after source artifacts PR is merged.
             {
-                executionContext.Variables.Set(Constants.Variables.Build.RepoId, repoInfo.Repository.Id);
+                executionContext.SetVariable(Constants.Variables.Build.RepoId, repoInfo.Repository.Id);
             }
 
-            executionContext.Variables.Set(Constants.Variables.Build.RepoName, repoInfo.Repository.Properties.Get<string>(Pipelines.RepositoryPropertyNames.Name));
-            executionContext.Variables.Set(Constants.Variables.Build.RepoProvider, ConvertToLegacyRepositoryType(repoInfo.Repository.Type));
-            executionContext.Variables.Set(Constants.Variables.Build.RepoUri, repoInfo.Repository.Url?.AbsoluteUri);
+            executionContext.SetVariable(Constants.Variables.Build.RepoName, repoInfo.Repository.Properties.Get<string>(Pipelines.RepositoryPropertyNames.Name));
+            executionContext.SetVariable(Constants.Variables.Build.RepoProvider, ConvertToLegacyRepositoryType(repoInfo.Repository.Type));
+            executionContext.SetVariable(Constants.Variables.Build.RepoUri, repoInfo.Repository.Url?.AbsoluteUri);
 
             // Prepare the build directory.
             executionContext.Output(StringUtil.Loc("PrepareBuildDir"));

@@ -232,31 +232,20 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.CodeCoverage
             {
                 throw new ArgumentException(StringUtil.Loc("ArgumentNeeded", "SummaryFile"));
             }
-            if (context.Container != null)
-            {
-                // Translate file path back from container path
-                _summaryFileLocation = context.Container.TranslateToHostPath(_summaryFileLocation);
-            }
+            // Translate file path back from container path
+            _summaryFileLocation = context.TranslateToHostPath(_summaryFileLocation);
+            
 
             eventProperties.TryGetValue(PublishCodeCoverageEventProperties.ReportDirectory, out _reportDirectory);
-            if (context.Container != null)
-            {
-                // Translate file path back from container path
-                _reportDirectory = context.Container.TranslateToHostPath(_reportDirectory);
-            }
+            // Translate file path back from container path
+            _reportDirectory = context.TranslateToHostPath(_reportDirectory);
+            
 
             string additionalFilesInput;
             eventProperties.TryGetValue(PublishCodeCoverageEventProperties.AdditionalCodeCoverageFiles, out additionalFilesInput);
             if (!string.IsNullOrEmpty(additionalFilesInput) && additionalFilesInput.Split(',').Count() > 0)
             {
-                if (context.Container != null)
-                {
-                    _additionalCodeCoverageFiles = additionalFilesInput.Split(',').Select(x => context.Container.TranslateToHostPath(x)).ToList<string>();
-                }
-                else
-                {
-                    _additionalCodeCoverageFiles = additionalFilesInput.Split(',').ToList<string>();
-                }
+                _additionalCodeCoverageFiles = additionalFilesInput.Split(',').Select(x => context.TranslateToHostPath(x)).ToList<string>();
             }
         }
 
