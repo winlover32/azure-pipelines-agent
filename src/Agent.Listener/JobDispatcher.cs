@@ -13,6 +13,8 @@ using Microsoft.VisualStudio.Services.WebApi;
 using Pipelines = Microsoft.TeamFoundation.DistributedTask.Pipelines;
 using System.Linq;
 using Microsoft.VisualStudio.Services.Common;
+using System.Diagnostics;
+
 
 namespace Microsoft.VisualStudio.Services.Agent.Listener
 {
@@ -423,28 +425,35 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                                 keepStandardInOpen: false,
                                 highPriorityProcess: true,
                                 cancellationToken: workerProcessCancelTokenSource.Token);
-                        });
+                        }
+                    );
 
                     // Send the job request message.
                     // Kill the worker process if sending the job message times out. The worker
                     // process may have successfully received the job message.
                     try
                     {
-                        Trace.Info($"Send job request message to worker for job {message.JobId}.");
+                        var body = JsonUtility.ToString(message);
+                        var numBytes = System.Text.ASCIIEncoding.Unicode.GetByteCount(body) / 1024;
+                        string numBytesString = numBytes > 0 ? $"{numBytes} KB" : " < 1 KB";
+                        Trace.Info($"Send job request message to worker for job {message.JobId} ({numBytesString}).");
                         HostContext.WritePerfCounter($"AgentSendingJobToWorker_{message.JobId}");
+                        var stopWatch = Stopwatch.StartNew();
                         using (var csSendJobRequest = new CancellationTokenSource(_channelTimeout))
                         {
                             await processChannel.SendAsync(
                                 messageType: MessageType.NewJobRequest,
-                                body: JsonUtility.ToString(message),
+                                body: body,
                                 cancellationToken: csSendJobRequest.Token);
                         }
+                        stopWatch.Stop();
+                        Trace.Info($"Took {stopWatch.ElapsedMilliseconds} ms to send job message to worker");
                     }
                     catch (OperationCanceledException)
                     {
                         // message send been cancelled.
                         // timeout 30 sec. kill worker.
-                        Trace.Info($"Job request message sending for job {message.JobId} been cancelled, kill running worker.");
+                        Trace.Info($"Job request message sending for job {message.JobId} been cancelled after waiting for {_channelTimeout.TotalSeconds} seconds, kill running worker.");
                         workerProcessCancelTokenSource.Cancel();
                         try
                         {
