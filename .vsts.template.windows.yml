@@ -31,7 +31,7 @@ steps:
   inputs:
     testRunner: VSTest
     testResultsFiles: '**/*.trx'
-    testRunTitle: 'Agent Tests'
+    testRunTitle: 'Agent Tests - ${{ parameters.testLogTitle }}'
 
 # Upload test log
 - task: PublishBuildArtifacts@1

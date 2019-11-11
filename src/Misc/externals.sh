@@ -12,8 +12,8 @@ get_abs_path() {
   echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 }
 
-LAYOUT_DIR=$(get_abs_path "$(dirname $0)/../../_layout")
-DOWNLOAD_DIR="$(get_abs_path "$(dirname $0)/../../_downloads")/netcore2x"
+LAYOUT_DIR=$(get_abs_path "$(dirname $0)/../../_layout/$PACKAGERUNTIME")
+DOWNLOAD_DIR="$(get_abs_path "$(dirname $0)/../../_downloads")/$PACKAGERUNTIME/netcore2x"
 
 function failed() {
    local error=${1:-Undefined error}

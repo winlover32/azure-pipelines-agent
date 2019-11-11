@@ -2,7 +2,7 @@
 
 ###############################################################################
 #  
-#  ./dev.sh build/layout/test/package [Debug/Release]
+#  ./dev.sh build/layout/test/package [Debug/Release] [optional: runtime ID]
 #
 ###############################################################################
 
@@ -10,15 +10,16 @@ set -e
 
 DEV_CMD=$1
 DEV_CONFIG=$2
+DEV_RUNTIME_ID=$3
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LAYOUT_DIR="$SCRIPT_DIR/../_layout"
-DOWNLOAD_DIR="$SCRIPT_DIR/../_downloads/netcore2x"
-PACKAGE_DIR="$SCRIPT_DIR/../_package"
+
+source "$SCRIPT_DIR/.helpers.sh"
+
 DOTNETSDK_ROOT="$SCRIPT_DIR/../_dotnetsdk"
 DOTNETSDK_VERSION="2.1.403"
 DOTNETSDK_INSTALLDIR="$DOTNETSDK_ROOT/$DOTNETSDK_VERSION"
-AGENT_VERSION=$(cat agentversion)
+AGENT_VERSION=$(cat "$SCRIPT_DIR/agentversion")
 
 pushd "$SCRIPT_DIR"
 
@@ -27,101 +28,55 @@ if [[ "$DEV_CONFIG" == "Release" ]]; then
     BUILD_CONFIG="Release"
 fi
 
-CURRENT_PLATFORM="windows"
-if [[ ($(uname) == "Linux") || ($(uname) == "Darwin") ]]; then
-    CURRENT_PLATFORM=$(uname | awk '{print tolower($0)}')
-fi
-
-if [[ "$CURRENT_PLATFORM" == 'windows' ]]; then
-   RUNTIME_ID='win-x64'
-   if [[ "$PROCESSOR_ARCHITECTURE" == 'x86' ]]; then
-      RUNTIME_ID='win-x86'
-   fi
-elif [[ "$CURRENT_PLATFORM" == 'linux' ]]; then
-   RUNTIME_ID="linux-x64"
-   if command -v uname > /dev/null; then
-      CPU_NAME=$(uname -m)
-      case $CPU_NAME in
-         armv7l) RUNTIME_ID="linux-arm";;
-         aarch64) RUNTIME_ID="linux-arm";;
-      esac
-   fi
-   
-   if [ -e /etc/redhat-release ]; then
-      redhatRelease=$(</etc/redhat-release)
-      if [[ $redhatRelease == "CentOS release 6."* || $redhatRelease == "Red Hat Enterprise Linux Server release 6."* ]]; then
-         RUNTIME_ID='rhel.6-x64'
-      fi
-   fi
-   
-elif [[ "$CURRENT_PLATFORM" == 'darwin' ]]; then
-   RUNTIME_ID='osx-x64'
-fi
-
-# Make sure current platform support publish the dotnet runtime
-# Windows can publish win-x86/x64
-# Linux can publish linux-x64/arm/rhel.6-x64
-# OSX can publish osx-x64
-if [[ "$CURRENT_PLATFORM" == 'windows' ]]; then
-   if [[ ("$RUNTIME_ID" != 'win-x86') && ("$RUNTIME_ID" != 'win-x64') ]]; then
-      echo "Failed: Can't build $RUNTIME_ID package $CURRENT_PLATFORM" >&2
-      exit 1
-   fi
-elif [[ "$CURRENT_PLATFORM" == 'linux' ]]; then
-   if [[ ("$RUNTIME_ID" != 'linux-x64') && ("$RUNTIME_ID" != 'linux-arm') && ("$RUNTIME_ID" != 'rhel.6-x64') ]]; then
-      echo "Failed: Can't build $RUNTIME_ID package $CURRENT_PLATFORM" >&2
-      exit 1
-   fi
-elif [[ "$CURRENT_PLATFORM" == 'darwin' ]]; then
-   if [[ ("$RUNTIME_ID" != 'osx-x64') ]]; then
-      echo "Failed: Can't build $RUNTIME_ID package $CURRENT_PLATFORM" >&2
-      exit 1
-   fi
-fi
-
-function failed()
+function detect_platform_and_runtime_id ()
 {
-   local error=${1:-Undefined error}
-   echo "Failed: $error" >&2
-   popd
-   exit 1
-}
+    heading "Platform / RID detection"
 
-function warn()
-{
-   local error=${1:-Undefined error}
-   echo "WARNING - FAILED: $error" >&2
-}
+    CURRENT_PLATFORM="windows"
+    if [[ ($(uname) == "Linux") || ($(uname) == "Darwin") ]]; then
+        CURRENT_PLATFORM=$(uname | awk '{print tolower($0)}')
+    fi
 
-function checkRC() {
-    local rc=$?
-    if [ $rc -ne 0 ]; then
-        failed "${1} Failed with return code $rc"
+    if [[ "$CURRENT_PLATFORM" == 'windows' ]]; then
+        DETECTED_RUNTIME_ID='win-x64'
+        if [[ "$PROCESSOR_ARCHITECTURE" == 'x86' ]]; then
+            DETECTED_RUNTIME_ID='win-x86'
+        fi
+    elif [[ "$CURRENT_PLATFORM" == 'linux' ]]; then
+        DETECTED_RUNTIME_ID="linux-x64"
+        if command -v uname > /dev/null; then
+            local CPU_NAME=$(uname -m)
+            case $CPU_NAME in
+                armv7l) DETECTED_RUNTIME_ID="linux-arm";;
+                aarch64) DETECTED_RUNTIME_ID="linux-arm";;
+            esac
+        fi
+    
+        if [ -e /etc/redhat-release ]; then
+            local redhatRelease=$(</etc/redhat-release)
+            if [[ $redhatRelease == "CentOS release 6."* || $redhatRelease == "Red Hat Enterprise Linux Server release 6."* ]]; then
+                DETECTED_RUNTIME_ID='rhel.6-x64'
+            fi
+        fi
+    
+    elif [[ "$CURRENT_PLATFORM" == 'darwin' ]]; then
+        DETECTED_RUNTIME_ID='osx-x64'
     fi
 }
 
-function heading()
+function cmd_build ()
 {
-    echo
-    echo
-    echo "-----------------------------------------"
-    echo "  ${1}"
-    echo "-----------------------------------------"
-}
-
-function build ()
-{
-    heading "Building ..."
-    dotnet msbuild -t:Build -p:PackageRuntime="${RUNTIME_ID}" -p:BUILDCONFIG="${BUILD_CONFIG}" -p:AgentVersion="${AGENT_VERSION}" || failed build
+    heading "Building"
+    dotnet msbuild -t:Build -p:PackageRuntime="${RUNTIME_ID}" -p:BUILDCONFIG="${BUILD_CONFIG}" -p:AgentVersion="${AGENT_VERSION}" -p:LayoutRoot="${LAYOUT_DIR}" || failed build
 
     mkdir -p "${LAYOUT_DIR}/bin/en-US"
     grep --invert-match '^ *"CLI-WIDTH-' ./Misc/layoutbin/en-US/strings.json > "${LAYOUT_DIR}/bin/en-US/strings.json"
 }
 
-function layout ()
+function cmd_layout ()
 {
-    heading "Create layout ..."
-    dotnet msbuild -t:layout -p:PackageRuntime="${RUNTIME_ID}" -p:BUILDCONFIG="${BUILD_CONFIG}" -p:AgentVersion="${AGENT_VERSION}" || failed build
+    heading "Creating layout"
+    dotnet msbuild -t:layout -p:PackageRuntime="${RUNTIME_ID}" -p:BUILDCONFIG="${BUILD_CONFIG}" -p:AgentVersion="${AGENT_VERSION}" -p:LayoutRoot="${LAYOUT_DIR}" || failed build
 
     mkdir -p "${LAYOUT_DIR}/bin/en-US"
     grep --invert-match '^ *"CLI-WIDTH-' ./Misc/layoutbin/en-US/strings.json > "${LAYOUT_DIR}/bin/en-US/strings.json"
@@ -138,18 +93,18 @@ function layout ()
     bash ./Misc/externals.sh $RUNTIME_ID || checkRC externals.sh
 }
 
-function runtest ()
+function cmd_test ()
 {
-    heading "Testing ..."
+    heading "Testing"
 
     if [[ ("$CURRENT_PLATFORM" == "linux") || ("$CURRENT_PLATFORM" == "darwin") ]]; then
         ulimit -n 1024
     fi
 
-    dotnet msbuild -t:test -p:PackageRuntime="${RUNTIME_ID}" -p:BUILDCONFIG="${BUILD_CONFIG}" -p:AgentVersion="${AGENT_VERSION}" -p:SkipOn="${CURRENT_PLATFORM}" || failed "failed tests" 
+    dotnet msbuild -t:test -p:PackageRuntime="${RUNTIME_ID}" -p:BUILDCONFIG="${BUILD_CONFIG}" -p:AgentVersion="${AGENT_VERSION}" -p:LayoutRoot="${LAYOUT_DIR}" -p:SkipOn="${CURRENT_PLATFORM}" || failed "failed tests" 
 }
 
-function package ()
+function cmd_package ()
 {
     if [ ! -d "${LAYOUT_DIR}/bin" ]; then
         echo "You must build first.  Expecting to find ${LAYOUT_DIR}/bin"
@@ -192,10 +147,32 @@ function package ()
     popd > /dev/null
 }
 
+detect_platform_and_runtime_id
+echo "Current platform: $CURRENT_PLATFORM"
+echo "Current runtime ID: $DETECTED_RUNTIME_ID"
+
+if [ "$DEV_RUNTIME_ID" ]; then
+    RUNTIME_ID=$DEV_RUNTIME_ID
+else
+    RUNTIME_ID=$DETECTED_RUNTIME_ID
+fi
+
+_VALID_RIDS='linux-x64:linux-arm:rhel.6-x64:osx-x64:win-x64:win-x86'
+if [[ ":$_VALID_RIDS:" != *:$RUNTIME_ID:* ]]; then
+    failed "must specify a valid target runtime ID (one of: $_VALID_RIDS)"
+fi
+
+echo "Building for runtime ID: $RUNTIME_ID"
+
+
+LAYOUT_DIR="$SCRIPT_DIR/../_layout/$RUNTIME_ID"
+DOWNLOAD_DIR="$SCRIPT_DIR/../_downloads/$RUNTIME_ID/netcore2x"
+PACKAGE_DIR="$SCRIPT_DIR/../_package/$RUNTIME_ID"
+
 if [[ (! -d "${DOTNETSDK_INSTALLDIR}") || (! -e "${DOTNETSDK_INSTALLDIR}/.${DOTNETSDK_VERSION}") || (! -e "${DOTNETSDK_INSTALLDIR}/dotnet") ]]; then
     
     # Download dotnet SDK to ../_dotnetsdk directory
-    heading "Ensure Dotnet SDK"
+    heading "Install .NET SDK"
 
     # _dotnetsdk
     #           \1.0.x
@@ -217,13 +194,16 @@ if [[ (! -d "${DOTNETSDK_INSTALLDIR}") || (! -e "${DOTNETSDK_INSTALLDIR}/.${DOTN
     echo "${DOTNETSDK_VERSION}" > "${DOTNETSDK_INSTALLDIR}/.${DOTNETSDK_VERSION}"
 fi
 
-echo "Prepend ${DOTNETSDK_INSTALLDIR} to %PATH%"
+
+heading ".NET SDK to path"
+
+echo "Adding .NET to PATH (${DOTNETSDK_INSTALLDIR})"
 export PATH=${DOTNETSDK_INSTALLDIR}:$PATH
+echo "Path = $PATH"
+echo ".NET Version = $(dotnet --version)"
 
-heading "Dotnet SDK Version"
-dotnet --version
-
-heading "Pre-cache external resources for $RUNTIME_ID package ..."
+heading "Pre-caching external resources for $RUNTIME_ID"
+mkdir -p "${LAYOUT_DIR}" >/dev/null
 bash ./Misc/externals.sh $RUNTIME_ID "Pre-Cache" || checkRC "externals.sh Pre-Cache"
 
 if [[ "$CURRENT_PLATFORM" == 'windows' ]]; then
@@ -243,15 +223,15 @@ if [[ "$CURRENT_PLATFORM" == 'windows' ]]; then
 fi
 
 case $DEV_CMD in
-   "build") build;;
-   "b") build;;
-   "test") runtest;;
-   "t") runtest;;
-   "layout") layout;;
-   "l") layout;;
-   "package") package;;
-   "p") package;;
-   *) echo "Invalid cmd.  Use build(b), test(t), layout(l) or package(p)";;
+   "build") cmd_build;;
+   "b") cmd_build;;
+   "test") cmd_test;;
+   "t") cmd_test;;
+   "layout") cmd_layout;;
+   "l") cmd_layout;;
+   "package") cmd_package;;
+   "p") cmd_package;;
+   *) echo "Invalid command. Use (l)ayout, (b)uild, (t)est, or (p)ackage.";;
 esac
 
 popd

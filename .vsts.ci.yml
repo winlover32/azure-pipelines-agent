@@ -30,21 +30,12 @@ jobs:
       componentDetection: 'true'
       testLogTitle: 'Windows-x64'
 
-  # Package dotnet core windows dependency (VC++ Redistributable)
-  - powershell: |
-      Write-Host "Downloading 'VC++ Redistributable' package."
-      $outDir = Join-Path -Path $env:TMP -ChildPath ([Guid]::NewGuid())
-      New-Item -Path $outDir -ItemType directory 
-      $outFile = Join-Path -Path $outDir -ChildPath "ucrt.zip"
-      Invoke-WebRequest -Uri https://vstsagenttools.blob.core.windows.net/tools/ucrt/ucrt_x64.zip -OutFile $outFile
-      Write-Host "Unzipping 'VC++ Redistributable' package to agent layout."
-      $unzipDir = Join-Path -Path $outDir -ChildPath "unzip"
-      Add-Type -AssemblyName System.IO.Compression.FileSystem
-      [System.IO.Compression.ZipFile]::ExtractToDirectory($outFile, $unzipDir)
-      $agentLayoutBin = Join-Path -Path $(Build.SourcesDirectory) -ChildPath "_layout\bin"
-      Copy-Item -Path $unzipDir -Destination $agentLayoutBin -Force
-    displayName: Package UCRT
-    condition: and(succeeded(), ne(variables['build.reason'], 'PullRequest'))
+  # Package .NET Core Windows dependency (VC++ Redistributable)
+  - template: .azure-pipelines/package-vcredist.yml
+    parameters:
+      layoutRoot: '_layout/win-x64'
+      flavor: 'x64'
+      condition: and(succeeded(), ne(variables['build.reason'], 'PullRequest'))
 
   # Create agent package zip
   - script: dev.cmd package Release
@@ -75,21 +66,12 @@ jobs:
     parameters:
       testLogTitle: 'Windows-x86'
 
-  # Package dotnet core windows dependency (VC++ Redistributable)
-  - powershell: |
-      Write-Host "Downloading 'VC++ Redistributable' package."
-      $outDir = Join-Path -Path $env:TMP -ChildPath ([Guid]::NewGuid())
-      New-Item -Path $outDir -ItemType directory 
-      $outFile = Join-Path -Path $outDir -ChildPath "ucrt.zip"
-      Invoke-WebRequest -Uri https://vstsagenttools.blob.core.windows.net/tools/ucrt/ucrt_x86.zip -OutFile $outFile
-      Write-Host "Unzipping 'VC++ Redistributable' package to agent layout."
-      $unzipDir = Join-Path -Path $outDir -ChildPath "unzip"
-      Add-Type -AssemblyName System.IO.Compression.FileSystem
-      [System.IO.Compression.ZipFile]::ExtractToDirectory($outFile, $unzipDir)
-      $agentLayoutBin = Join-Path -Path $(Build.SourcesDirectory) -ChildPath "_layout\bin"
-      Copy-Item -Path $unzipDir -Destination $agentLayoutBin -Force
-    displayName: Package UCRT
-    condition: and(succeeded(), ne(variables['build.reason'], 'PullRequest'))
+  # Package .NET Core Windows dependency (VC++ Redistributable)
+  - template: .azure-pipelines/package-vcredist.yml
+    parameters:
+      layoutRoot: '_layout/win-x86'
+      flavor: 'x86'
+      condition: and(succeeded(), ne(variables['build.reason'], 'PullRequest'))
 
   # Create agent package zip
   - script: dev.cmd package Release

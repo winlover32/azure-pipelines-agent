@@ -26,13 +26,17 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests
                 Process sleep = null;
                 try
                 {
-                    string node = Path.Combine(
-                        TestUtil.GetSrcPath(), "..", "_layout", "externals", "node", "bin", "node");
-
                     // TODO: this was formerly skipped on Windows - why?
                     hc.EnqueueInstance<IProcessInvoker>(new ProcessInvokerWrapper());
 
-                    var startInfo = new ProcessStartInfo(node, "-e \"setTimeout(function(){{}}, 15 * 1000);\"");
+                    // sleep 15 seconds
+                    string sleepCmd = (TestUtil.IsWindows())
+                        ? "powershell"
+                        : "sleep";
+                    string sleepArgs = (TestUtil.IsWindows())
+                        ? "-Command \"Start-Sleep -s 15\""
+                        : "15s";
+                    var startInfo = new ProcessStartInfo(sleepCmd, sleepArgs);
                     startInfo.Environment[envName] = envValue;
                     sleep = Process.Start(startInfo);
 
