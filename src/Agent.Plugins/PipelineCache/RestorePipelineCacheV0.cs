@@ -22,6 +22,7 @@ namespace Agent.Plugins.PipelineCache
             CancellationToken token)
         {
             context.SetTaskVariable(RestoreStepRanVariableName, RestoreStepRanVariableValue);
+            context.SetTaskVariable(ResolvedFingerPrintVariableName, fingerprint.ToString());
 
             var server = new PipelineCacheServer();
             Fingerprint[] restoreFingerprints = restoreKeysGenerator();
