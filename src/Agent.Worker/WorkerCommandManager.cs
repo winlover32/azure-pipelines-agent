@@ -13,6 +13,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
     {
         void EnablePluginInternalCommand(bool enable);
         bool TryProcessCommand(IExecutionContext context, string input);
+        void SetCommandRestrictionPolicy(IWorkerCommandRestrictionPolicy policy);
     }
 
     public sealed class WorkerCommandManager : AgentService, IWorkerCommandManager

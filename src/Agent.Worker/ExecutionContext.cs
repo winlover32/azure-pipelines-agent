@@ -68,7 +68,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         // others
         void ForceTaskComplete();
         string TranslateToHostPath(string path);
-        ContainerInfo StepTarget();
+        ExecutionTargetInfo StepTarget();
+        void SetStepTarget(Pipelines.StepTarget target);
         string TranslatePathForStepTarget(string val);
         IHostContext GetHostContext();
     }
@@ -93,6 +94,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         private CancellationTokenSource _cancellationTokenSource;
         private TaskCompletionSource<int> _forceCompleted = new TaskCompletionSource<int>();
         private bool _throttlingReported = false;
+        private ExecutionTargetInfo _defaultStepTarget;
+        private ExecutionTargetInfo _currentStepTarget;
 
         // only job level ExecutionContext will track throttling delay.
         private long _totalThrottlingDelayInMilliseconds = 0;
@@ -111,8 +114,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         public List<string> PrependPath { get; private set; }
         public List<ContainerInfo> Containers { get; private set; }
         public List<ContainerInfo> SidecarContainers { get; private set; }
-        public ContainerInfo DefaultStepTarget { get; private set; } // TODO: maybe keep this private
-        public ContainerInfo CurrentStepTarget { get; private set; } // TODO: maybe keep this private
         public List<IAsyncCommandContext> AsyncCommands => _asyncCommands;
 
         public TaskResult? Result
@@ -192,8 +193,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             child.Containers = Containers;
             child.SidecarContainers = SidecarContainers;
             child._outputForward = outputForward;
-            child.DefaultStepTarget = DefaultStepTarget;
-            child.CurrentStepTarget = CurrentStepTarget;
+            child._defaultStepTarget = _defaultStepTarget;
+            child._currentStepTarget = _currentStepTarget;
 
             child.InitializeTimelineRecord(_mainTimelineId, recordId, _record.Id, ExecutionContextType.Task, displayName, refName, ++_childTimelineRecordOrder);
 
@@ -427,8 +428,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             }
 
             Containers = new List<ContainerInfo>();
-            DefaultStepTarget = null;
-            CurrentStepTarget = null;
+            _defaultStepTarget = null;
+            _currentStepTarget = null;
             if (!string.IsNullOrEmpty(imageName) &&
                 string.IsNullOrEmpty(message.JobContainer))
             {
@@ -437,17 +438,24 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     Alias = "vsts_container_preview"
                 };
                 dockerContainer.Properties.Set("image", imageName);
-                DefaultStepTarget = HostContext.CreateContainerInfo(dockerContainer);
-                Containers.Add(DefaultStepTarget);
+                var defaultJobContainer = HostContext.CreateContainerInfo(dockerContainer);
+                _defaultStepTarget = defaultJobContainer;
+                Containers.Add(defaultJobContainer);
             }
             else if (!string.IsNullOrEmpty(message.JobContainer))
             {
-                DefaultStepTarget = HostContext.CreateContainerInfo(message.Resources.Containers.Single(x => string.Equals(x.Alias, message.JobContainer, StringComparison.OrdinalIgnoreCase)));
-                Containers.Add(DefaultStepTarget);
-                foreach (var container in message.Resources.Containers.FindAll(x => !string.Equals(x.Alias, message.JobContainer, StringComparison.OrdinalIgnoreCase)))
-                {
-                    Containers.Add(HostContext.CreateContainerInfo(container));
-                }
+                var defaultJobContainer = HostContext.CreateContainerInfo(message.Resources.Containers.Single(x => string.Equals(x.Alias, message.JobContainer, StringComparison.OrdinalIgnoreCase)));
+                _defaultStepTarget = defaultJobContainer;
+                Containers.Add(defaultJobContainer);
+            }
+            else
+            {
+                _defaultStepTarget = new HostInfo();
+            }
+            // Include other step containers
+            foreach (var container in message.Resources.Containers.Where(x => !string.Equals(x.Alias, message.JobContainer, StringComparison.OrdinalIgnoreCase)))
+            {
+                Containers.Add(HostContext.CreateContainerInfo(container));
             }
 
             // Docker (Sidecar Containers)
@@ -687,14 +695,41 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             return val;
         }
 
-        public ContainerInfo StepTarget()
+        public ExecutionTargetInfo StepTarget()
         {
-            if (CurrentStepTarget != null)
+            if (_currentStepTarget != null)
             {
-                return CurrentStepTarget;
+                return _currentStepTarget;
             }
 
-            return DefaultStepTarget;
+            return _defaultStepTarget;
+        }
+
+        public void SetStepTarget(Pipelines.StepTarget target)
+        {
+            // Enforce command restriction if set for the step target
+            var commandManager = HostContext.GetService<IWorkerCommandManager>();
+            if (string.Equals(WellKnownStepTargetStrings.Restricted, target?.Commands, StringComparison.OrdinalIgnoreCase))
+            {
+                commandManager.SetCommandRestrictionPolicy(new AttributeBasedWorkerCommandRestrictionPolicy());
+            }
+            else
+            {
+                commandManager.SetCommandRestrictionPolicy(new UnrestricedWorkerCommandRestrictionPolicy());
+            }
+
+            // When step targets are set, we need to take over control for translating paths
+            // from the job execution context
+            Variables.StringTranslator = TranslatePathForStepTarget;
+
+            if (string.Equals(WellKnownStepTargetStrings.Host, target?.Target, StringComparison.OrdinalIgnoreCase))
+            {
+                _currentStepTarget = new HostInfo();
+            }
+            else
+            {
+                _currentStepTarget = Containers.FirstOrDefault(x => string.Equals(x.ContainerName, target?.Target, StringComparison.OrdinalIgnoreCase));
+            }
         }
     }
 
@@ -760,5 +795,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         public static readonly string Error = "##[error]";
         public static readonly string Warning = "##[warning]";
         public static readonly string Debug = "##[debug]";
+    }
+
+    public static class WellKnownStepTargetStrings
+    {
+        public static readonly string Host = "host";
+        public static readonly string Restricted = "restricted";
     }
 }

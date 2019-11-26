@@ -159,12 +159,13 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             string arguments = $"task \"{plugin}\"";
 
             // construct plugin context
+            var target = context.StepTarget();
             AgentTaskPluginExecutionContext pluginContext = new AgentTaskPluginExecutionContext
             {
                 Inputs = inputs,
                 Repositories = context.Repositories,
                 Endpoints = context.Endpoints,
-                Container = context.StepTarget(), //TODO: Figure out if this needs to have all the containers or just the one for the current step
+                Container = target is ContainerInfo ? target as ContainerInfo : null, //TODO: Figure out if this needs to have all the containers or just the one for the current step
                 JobSettings = context.JobSettings,
             };
 

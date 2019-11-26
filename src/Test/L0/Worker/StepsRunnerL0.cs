@@ -12,6 +12,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Xunit;
 using Microsoft.TeamFoundation.DistributedTask.Expressions;
+using Pipelines = Microsoft.TeamFoundation.DistributedTask.Pipelines;
 
 namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
 {
@@ -326,7 +327,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
                         jobContext: _ec.Object,
                         steps: variableSet.Step.Select(x => x.Object).ToList());
 
-                    // Assert.                    
+                    // Assert.
                     Assert.Equal(2, variableSet.Step.Length);
                     variableSet.Step[0].Verify(x => x.RunAsync());
                     variableSet.Step[1].Verify(x => x.RunAsync(), variableSet.Expected ? Times.Once() : Times.Never());
@@ -396,6 +397,43 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
                     // Assert.
                     Assert.Equal(TaskResult.Failed, _ec.Object.Result ?? TaskResult.Succeeded);
                 }
+            }
+        }
+
+        [Fact]
+        [Trait("Level", "L0")]
+        [Trait("Category", "Worker")]
+        public async Task SetStepTarget()
+        {
+            using (TestHostContext hc = CreateTestContext())
+            {
+                var stepTarget = new Pipelines.StepTarget {
+                    Target = "container"
+                };
+                var step = CreateStep(TaskResult.Succeeded, ExpressionManager.Succeeded);
+                step.Setup(x => x.Target).Returns(stepTarget);
+
+                // Override step context
+                var stepContext = new Mock<IExecutionContext>();
+                stepContext.SetupAllProperties();
+                stepContext.Setup(x => x.Variables).Returns(_variables);
+                stepContext.Setup(x => x.Complete(It.IsAny<TaskResult?>(), It.IsAny<string>(), It.IsAny<string>()))
+                    .Callback((TaskResult? r, string currentOperation, string resultCode) =>
+                    {
+                        if (r != null)
+                        {
+                            stepContext.Object.Result = r;
+                        }
+                    });
+                step.Setup(x => x.ExecutionContext).Returns(stepContext.Object);
+
+                // Act.
+                await _stepsRunner.RunAsync(
+                    jobContext: _ec.Object,
+                    steps: new[] { step.Object });
+
+                // Assert.
+                stepContext.Verify(x => x.SetStepTarget(stepTarget), Times.Once);
             }
         }
 

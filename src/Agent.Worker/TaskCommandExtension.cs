@@ -33,6 +33,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         }
     }
 
+    [CommandRestriction(AllowedInRestrictedMode=true)]
     public sealed class TaskDetailCommand: IWorkerCommand
     {
         public string Name => "logdetail";
@@ -320,6 +321,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         }
     }
 
+    [CommandRestriction(AllowedInRestrictedMode=true)]
     public sealed class TaskIssueCommand: IWorkerCommand
     {
         public string Name => "logissue";
@@ -438,6 +440,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         }
     }
 
+    [CommandRestriction(AllowedInRestrictedMode=true)]
     public sealed class TaskCompleteCommand: IWorkerCommand
     {
         public string Name => "complete";
@@ -469,6 +472,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         }
     }
 
+    [CommandRestriction(AllowedInRestrictedMode=true)]
     public sealed class TaskProgressCommand: IWorkerCommand
     {
         public string Name => "setprogress";
@@ -494,6 +498,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         }
     }
 
+    [CommandRestriction(AllowedInRestrictedMode=true)]
     public sealed class TaskSetSecretCommand: IWorkerCommand
     {
         public string Name => "setsecret";
@@ -509,6 +514,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         }
     }
 
+    [CommandRestriction(AllowedInRestrictedMode=true)]
     public sealed class TaskSetVariableCommand: IWorkerCommand
     {
         public string Name => "setvariable";
@@ -572,6 +578,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         }
     }
 
+    [CommandRestriction(AllowedInRestrictedMode=true)]
     public sealed class TaskSetTaskVariableCommand: IWorkerCommand
     {
         public string Name => "settaskvariable";
@@ -693,6 +700,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         }
     }
 
+    [CommandRestriction(AllowedInRestrictedMode=true)]
     public sealed class TaskPrepandPathCommand: IWorkerCommand
     {
         public string Name => "prependpath";

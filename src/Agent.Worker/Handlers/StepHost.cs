@@ -165,9 +165,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
             File.Copy(Path.Combine(HostContext.GetDirectory(WellKnownDirectory.Bin), "containerHandlerInvoker.js.template"), targetEntryScript, true);
 
             string node;
-            if (!string.IsNullOrEmpty(Container.ContainerBringNodePath))
+            if (!string.IsNullOrEmpty(Container.CustomNodePath))
             {
-                node = Container.ContainerBringNodePath;
+                node = Container.CustomNodePath;
             }
             else
             {

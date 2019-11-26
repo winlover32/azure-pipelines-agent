@@ -20,6 +20,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Telemetry
             InstallWorkerCommand(new PublishTelemetryCommand());
         }
     }
+
+    [CommandRestriction(AllowedInRestrictedMode=true)]
     public sealed class PublishTelemetryCommand: IWorkerCommand
     {
         public string Name => "publish";

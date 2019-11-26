@@ -271,11 +271,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             Trace.Info($"Container registry: {container.ContainerRegistryEndpoint.ToString()}");
             Trace.Info($"Container options: {container.ContainerCreateOptions}");
             Trace.Info($"Skip container image pull: {container.SkipContainerImagePull}");
-            foreach(var port in container.UserPortMappings)
+            foreach (var port in container.UserPortMappings)
             {
                 Trace.Info($"User provided port: {port.Value}");
             }
-            foreach(var volume in container.UserMountVolumes)
+            foreach (var volume in container.UserMountVolumes)
             {
                 Trace.Info($"User provided volume: {volume.Value}");
             }
@@ -283,6 +283,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             if (container.ImageOS != PlatformUtil.OS.Windows)
             {
                 string defaultWorkingDirectory = executionContext.Variables.Get(Constants.Variables.System.DefaultWorkingDirectory);
+                defaultWorkingDirectory = container.TranslateContainerPathForImageOS(PlatformUtil.HostOS, container.TranslateToContainerPath(defaultWorkingDirectory));
                 if (string.IsNullOrEmpty(defaultWorkingDirectory))
                 {
                     throw new NotSupportedException(StringUtil.Loc("ContainerJobRequireSystemDefaultWorkDir"));
@@ -305,7 +306,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             else
             {
                 container.MountVolumes.Add(new MountVolume(HostContext.GetDirectory(WellKnownDirectory.Work), container.TranslateToContainerPath(HostContext.GetDirectory(WellKnownDirectory.Work))));
-
             }
 
             container.MountVolumes.Add(new MountVolume(HostContext.GetDirectory(WellKnownDirectory.Tools), container.TranslateToContainerPath(HostContext.GetDirectory(WellKnownDirectory.Tools))));
@@ -328,14 +328,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             if (container.IsJobContainer)
             {
                 // See if this container brings its own Node.js
-                container.ContainerBringNodePath = await _dockerManger.DockerInspect(context: executionContext,
+                container.CustomNodePath = await _dockerManger.DockerInspect(context: executionContext,
                                                                     dockerObject: container.ContainerImage,
                                                                     options: $"--format=\"{{{{index .Config.Labels \\\"{_nodeJsPathLabel}\\\"}}}}\"");
 
                 string node;
-                if (!string.IsNullOrEmpty(container.ContainerBringNodePath))
+                if (!string.IsNullOrEmpty(container.CustomNodePath))
                 {
-                    node = container.ContainerBringNodePath;
+                    node = container.CustomNodePath;
                 }
                 else
                 {
@@ -344,14 +344,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     // if on Mac OS X, require container to have node
                     if (PlatformUtil.RunningOnMacOS)
                     {
-                        container.ContainerBringNodePath = "node";
-                        node = container.ContainerBringNodePath;
+                        container.CustomNodePath = "node";
+                        node = container.CustomNodePath;
                     }
                     // if running on Windows, and attempting to run linux container, require container to have node
                     else if (PlatformUtil.RunningOnWindows && container.ImageOS == PlatformUtil.OS.Linux)
                     {
-                        container.ContainerBringNodePath = "node";
-                        node = container.ContainerBringNodePath;
+                        container.CustomNodePath = "node";
+                        node = container.CustomNodePath;
                     }
                 }
                 string sleepCommand = $"\"{node}\" -e \"setInterval(function(){{}}, 24 * 60 * 60 * 1000);\"";
@@ -397,7 +397,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             }
 
             // Get port mappings of running container
-            if (executionContext.StepTarget() == null && !container.IsJobContainer)
+            if (!container.IsJobContainer)
             {
                 container.AddPortMappings(await _dockerManger.DockerPort(executionContext, container.ContainerId));
                 foreach (var port in container.PortMappings)
@@ -558,7 +558,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         }
 
                         // if path to node is just 'node', with no path, let's make sure it is actually there
-                        if (string.Equals(container.ContainerBringNodePath, "node", StringComparison.OrdinalIgnoreCase))
+                        if (string.Equals(container.CustomNodePath, "node", StringComparison.OrdinalIgnoreCase))
                         {
                             List<string> nodeVersionOutput = new List<string>();
                             int execNodeVersionExitCode = await _dockerManger.DockerExec(executionContext, container.ContainerId, string.Empty, $"bash -c \"node -v\"", nodeVersionOutput);

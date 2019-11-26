@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.TeamFoundation.DistributedTask.Expressions;
+using Pipelines = Microsoft.TeamFoundation.DistributedTask.Pipelines;
 
 namespace Microsoft.VisualStudio.Services.Agent.Worker
 {
@@ -17,6 +18,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         IExpressionNode Condition { get; set; }
         bool ContinueOnError { get; }
         string DisplayName { get; }
+        Pipelines.StepTarget Target { get; }
         bool Enabled { get; }
         IExecutionContext ExecutionContext { get; set; }
         TimeSpan? Timeout { get; }
@@ -203,6 +205,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             Trace.Info("Starting the step.");
             step.ExecutionContext.Section(StringUtil.Loc("StepStarting", step.DisplayName));
             step.ExecutionContext.SetTimeout(timeout: step.Timeout);
+            step.ExecutionContext.SetStepTarget(step.Target);
 
             // Windows may not be on the UTF8 codepage; try to fix that
             await SwitchToUtf8Codepage(step);

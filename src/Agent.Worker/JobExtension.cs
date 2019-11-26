@@ -121,7 +121,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         // This is for internal testing and is not publicly supported. This will be removed from the agent at a later time.
                         var prepareScript = Environment.GetEnvironmentVariable("VSTS_AGENT_INIT_INTERNAL_TEMP_HACK");
                         ServiceEndpoint systemConnection = context.Endpoints.Single(x => string.Equals(x.Name, WellKnownServiceEndpointNames.SystemVssConnection, StringComparison.OrdinalIgnoreCase));
-                        if (!string.IsNullOrEmpty(prepareScript) && context.StepTarget() == null)
+                        if (!string.IsNullOrEmpty(prepareScript) && context.StepTarget() is HostInfo)
                         {
                             var prepareStep = new ManagementScriptStep(
                                 scriptPath: prepareScript,
@@ -276,7 +276,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                         // Add script post steps.
                         // This is for internal testing and is not publicly supported. This will be removed from the agent at a later time.
                         var finallyScript = Environment.GetEnvironmentVariable("VSTS_AGENT_CLEANUP_INTERNAL_TEMP_HACK");
-                        if (!string.IsNullOrEmpty(finallyScript) && context.StepTarget() == null)
+                        if (!string.IsNullOrEmpty(finallyScript) && context.StepTarget() is HostInfo)
                         {
                             var finallyStep = new ManagementScriptStep(
                                 scriptPath: finallyScript,

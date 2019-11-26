@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Agent.Sdk;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +10,7 @@ using Pipelines = Microsoft.TeamFoundation.DistributedTask.Pipelines;
 
 namespace Agent.Sdk
 {
-    public class ContainerInfo
+    public class ContainerInfo : ExecutionTargetInfo
     {
         private IDictionary<string, string> _userMountVolumes;
         private List<MountVolume> _mountVolumes;
@@ -20,6 +19,8 @@ namespace Agent.Sdk
         private Dictionary<string, string> _environmentVariables;
         private Dictionary<string, string> _pathMappings;
         private PlatformUtil.OS _imageOS;
+
+        public PlatformUtil.OS ExecutionOS => _imageOS;
 
         public ContainerInfo()
         {
@@ -75,7 +76,7 @@ namespace Agent.Sdk
         public string ContainerImage { get; set; }
         public string ContainerName { get; set; }
         public string ContainerCommand { get; set; }
-        public string ContainerBringNodePath { get; set; }
+        public string CustomNodePath { get; set; }
         public Guid ContainerRegistryEndpoint { get; private set; }
         public string ContainerCreateOptions { get; set; }
         public bool SkipContainerImagePull { get; private set; }

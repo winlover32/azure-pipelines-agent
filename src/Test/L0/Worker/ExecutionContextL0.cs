@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Agent.Sdk;
 using Microsoft.TeamFoundation.DistributedTask.WebApi;
 using Moq;
 using System;
@@ -10,6 +11,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using Xunit;
 using Pipelines = Microsoft.TeamFoundation.DistributedTask.Pipelines;
+using Microsoft.VisualStudio.Services.Agent.Worker;
 
 namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
 {
@@ -118,6 +120,156 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker
                 jobServerQueue.Verify(x => x.QueueTimelineRecordUpdate(It.IsAny<Guid>(), It.Is<TimelineRecord>(t => t.WarningCount == 14)), Times.AtLeastOnce);
                 jobServerQueue.Verify(x => x.QueueTimelineRecordUpdate(It.IsAny<Guid>(), It.Is<TimelineRecord>(t => t.Issues.Where(i => i.Type == IssueType.Error).Count() == 10)), Times.AtLeastOnce);
                 jobServerQueue.Verify(x => x.QueueTimelineRecordUpdate(It.IsAny<Guid>(), It.Is<TimelineRecord>(t => t.Issues.Where(i => i.Type == IssueType.Warning).Count() == 10)), Times.AtLeastOnce);
+            }
+        }
+
+        [Fact]
+        [Trait("Level", "L0")]
+        [Trait("Category", "Worker")]
+        public void StepTarget_VerifySet()
+        {
+            using (TestHostContext hc = CreateTestContext())
+            {
+                var ec = new Agent.Worker.ExecutionContext();
+                ec.Initialize(hc);
+
+                var pipeContainer = new Pipelines.ContainerResource {
+                    Alias = "container"
+                };
+                pipeContainer.Properties.Set<string>("image", "someimage");
+                // Arrange: Create a job request message.
+                TaskOrchestrationPlanReference plan = new TaskOrchestrationPlanReference();
+                TimelineReference timeline = new TimelineReference();
+                JobEnvironment environment = new JobEnvironment();
+                environment.SystemConnection = new ServiceEndpoint();
+                List<Pipelines.JobStep> steps = new List<Pipelines.JobStep>();
+                steps.Add(new Pipelines.TaskStep
+                {
+                    Target = new Pipelines.StepTarget
+                    {
+                        Target = "container"
+                    },
+                    Reference = new Pipelines.TaskStepDefinitionReference()
+                });
+                var resources = new Pipelines.JobResources();
+                resources.Containers.Add(pipeContainer);
+                Guid JobId = Guid.NewGuid();
+                string jobName = "some job name";
+                var jobRequest = new Pipelines.AgentJobRequestMessage(plan, timeline, JobId, jobName, jobName, null, new Dictionary<string, string>(),
+                    new Dictionary<string, VariableValue>(), new List<MaskHint>(), resources, new Pipelines.WorkspaceOptions(), steps);
+
+                // Arrange: Setup command manager
+                var commandMock = new Mock<IWorkerCommandManager>();
+                hc.SetSingleton(commandMock.Object);
+                var pagingLogger = new Mock<IPagingLogger>();
+                hc.EnqueueInstance(pagingLogger.Object);
+
+                // Act.
+                ec.InitializeJob(jobRequest, CancellationToken.None);
+                ec.SetStepTarget(steps[0].Target);
+
+                // Assert.
+                Assert.IsType<ContainerInfo>(ec.StepTarget());
+                commandMock.Verify(x => x.SetCommandRestrictionPolicy(It.IsAny<UnrestricedWorkerCommandRestrictionPolicy>()));
+            }
+        }
+
+        [Fact]
+        [Trait("Level", "L0")]
+        [Trait("Category", "Worker")]
+        public void StepTarget_RestrictedCommands_Host()
+        {
+            using (TestHostContext hc = CreateTestContext())
+            {
+                var ec = new Agent.Worker.ExecutionContext();
+                ec.Initialize(hc);
+
+                var pipeContainer = new Pipelines.ContainerResource {
+                    Alias = "container"
+                };
+                pipeContainer.Properties.Set<string>("image", "someimage");
+                // Arrange: Create a job request message.
+                TaskOrchestrationPlanReference plan = new TaskOrchestrationPlanReference();
+                TimelineReference timeline = new TimelineReference();
+                JobEnvironment environment = new JobEnvironment();
+                environment.SystemConnection = new ServiceEndpoint();
+                List<Pipelines.JobStep> steps = new List<Pipelines.JobStep>();
+                steps.Add(new Pipelines.TaskStep
+                {
+                    Target = new Pipelines.StepTarget
+                    {
+                        Target = "host",
+                        Commands = "restricted"
+                    },
+                    Reference = new Pipelines.TaskStepDefinitionReference()
+                });
+                var resources = new Pipelines.JobResources();
+                resources.Containers.Add(pipeContainer);
+                Guid JobId = Guid.NewGuid();
+                string jobName = "some job name";
+                var jobRequest = new Pipelines.AgentJobRequestMessage(plan, timeline, JobId, jobName, jobName, null, new Dictionary<string, string>(),
+                    new Dictionary<string, VariableValue>(), new List<MaskHint>(), resources, new Pipelines.WorkspaceOptions(), steps);
+
+                // Arrange: Setup command manager
+                var commandMock = new Mock<IWorkerCommandManager>();
+                hc.SetSingleton(commandMock.Object);
+                var pagingLogger = new Mock<IPagingLogger>();
+                hc.EnqueueInstance(pagingLogger.Object);
+
+                // Act.
+                ec.InitializeJob(jobRequest, CancellationToken.None);
+                ec.SetStepTarget(steps[0].Target);
+
+                // Assert.
+                Assert.IsType<HostInfo>(ec.StepTarget());
+                commandMock.Verify(x => x.SetCommandRestrictionPolicy(It.IsAny<AttributeBasedWorkerCommandRestrictionPolicy>()));
+            }
+        }
+
+        [Fact]
+        [Trait("Level", "L0")]
+        [Trait("Category", "Worker")]
+        public void StepTarget_LoadStepContainersWithoutJobContainer()
+        {
+            using (TestHostContext hc = CreateTestContext())
+            {
+                var ec = new Agent.Worker.ExecutionContext();
+                ec.Initialize(hc);
+
+                var pipeContainer = new Pipelines.ContainerResource {
+                    Alias = "container"
+                };
+                pipeContainer.Properties.Set<string>("image", "someimage");
+                // Arrange: Create a job request message.
+                TaskOrchestrationPlanReference plan = new TaskOrchestrationPlanReference();
+                TimelineReference timeline = new TimelineReference();
+                JobEnvironment environment = new JobEnvironment();
+                environment.SystemConnection = new ServiceEndpoint();
+                List<Pipelines.JobStep> steps = new List<Pipelines.JobStep>();
+                steps.Add(new Pipelines.TaskStep
+                {
+                    Target = new Pipelines.StepTarget
+                    {
+                        Target = "container"
+                    },
+                    Reference = new Pipelines.TaskStepDefinitionReference()
+                });
+                var resources = new Pipelines.JobResources();
+                resources.Containers.Add(pipeContainer);
+                Guid JobId = Guid.NewGuid();
+                string jobName = "some job name";
+                var jobRequest = new Pipelines.AgentJobRequestMessage(plan, timeline, JobId, jobName, jobName, null, new Dictionary<string, string>(),
+                    new Dictionary<string, VariableValue>(), new List<MaskHint>(), resources, new Pipelines.WorkspaceOptions(), steps);
+
+                // Arrange: Setup command manager
+                var pagingLogger = new Mock<IPagingLogger>();
+                hc.EnqueueInstance(pagingLogger.Object);
+
+                // Act.
+                ec.InitializeJob(jobRequest, CancellationToken.None);
+
+                // Assert.
+                Assert.Equal(1, ec.Containers.Count());
             }
         }
 

@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         private Variables Data;
         private HashSet<string> Names;
 
-        public VariableScope(Variables data) 
+        public VariableScope(Variables data)
         {
             Data = data;
             Names = new HashSet<string>();
@@ -111,7 +111,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         }
 
         // DO NOT add file path variable to here.
-        // All file path variables needs to be retrive and set through ExecutionContext, so it can handle container file path translation.
+        // All file path variables needs to be retrieved and set through ExecutionContext, so it can handle container file path translation.
 
         public TaskResult? Agent_JobStatus
         {
