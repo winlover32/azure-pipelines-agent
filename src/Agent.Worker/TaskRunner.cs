@@ -5,8 +5,10 @@ using Agent.Sdk;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
 using Microsoft.TeamFoundation.DistributedTask.Expressions;
 using Microsoft.TeamFoundation.DistributedTask.WebApi;
 using Pipelines = Microsoft.TeamFoundation.DistributedTask.Pipelines;
@@ -71,6 +73,31 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 // TODO: Add a try catch here to give a better error message.
                 Definition definition = taskManager.Load(Task);
                 ArgUtil.NotNull(definition, nameof(definition));
+
+                // Verify task signatures if a fingerprint is configured for the Agent.
+                var configurationStore = HostContext.GetService<IConfigurationStore>();
+                AgentSettings settings = configurationStore.GetSettings();
+                
+                if (!String.IsNullOrEmpty(settings.Fingerprint))
+                {
+                    ISignatureService signatureService = HostContext.CreateService<ISignatureService>();
+                    Boolean verificationSuccessful =  await signatureService.VerifyAsync(definition, ExecutionContext.CancellationToken);
+
+                    if (verificationSuccessful) 
+                    {
+                        ExecutionContext.Output("Task signature verification successful.");
+
+                        // Only extract if it's not the checkout task.
+                        if (!String.IsNullOrEmpty(definition.ZipPath))
+                        {
+                            taskManager.Extract(ExecutionContext, Task);
+                        }
+                    }
+                    else 
+                    {
+                        throw new Exception("Task signature verification failed.");
+                    }
+                }
 
                 // Print out task metadata
                 PrintTaskMetaData(definition);
