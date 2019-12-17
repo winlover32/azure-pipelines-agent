@@ -95,7 +95,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             {
                 if (!string.IsNullOrWhiteSpace(variable.Key))
                 {
-                    variables.Add(new Variable(variable.Key, variable.Value.Value, variable.Value.IsSecret));
+                    variables.Add(new Variable(variable.Key, variable.Value.Value, variable.Value.IsSecret, variable.Value.IsReadOnly));
                 }
             }
 
@@ -185,6 +185,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 return GetBoolean(Constants.Variables.Agent.RetainDefaultEncoding) ?? true;
             }
         }
+
+        public bool Read_Only_Variables => GetBoolean(Constants.Variables.Agent.ReadOnlyVariables) ?? false;
 
         public string System_CollectionId => Get(Constants.Variables.System.CollectionId);
 
@@ -374,7 +376,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             }
         }
 
-        public void Set(string name, string val, bool secret = false)
+        public void Set(string name, string val, bool secret = false, bool readOnly = false)
         {
             // Validate the args.
             ArgUtil.NotNullOrEmpty(name, nameof(name));
@@ -400,14 +402,33 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     _secretMasker.AddValue(val);
                 }
 
+                // Also keep any variables that are already read only as read only.
+                // This only really matters for server side system variables that get updated by something other than setVariable (e.g. updateBuildNumber).
+                readOnly = readOnly || (_expanded.ContainsKey(name) && _expanded[name].ReadOnly);
+
                 // Store the value as-is to the expanded dictionary and the non-expanded dictionary.
                 // It is not expected that the caller needs to store an non-expanded value and then
                 // retrieve the expanded value in the same context.
-                var variable = new Variable(name, val, secret);
+                var variable = new Variable(name, val, secret, readOnly);
                 _expanded[name] = variable;
                 _nonexpanded[name] = variable;
                 _trace.Verbose($"Set '{name}' = '{val}'");
             }
+        }
+
+        public bool IsReadOnly(string name)
+        {
+            if (!Read_Only_Variables)
+            {
+                return false;
+            }
+
+            Variable existingVariable = null;
+            if (!_expanded.TryGetValue(name, out existingVariable)) {
+                _nonexpanded.TryGetValue(name, out existingVariable);
+            }
+
+            return (existingVariable != null && IsReadOnly(existingVariable));
         }
 
         public bool TryGetValue(string name, out string val)
@@ -444,6 +465,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                 foreach (string name in _nonexpanded.Keys)
                 {
                     bool secret = _nonexpanded[name].Secret;
+                    bool readOnly = _nonexpanded[name].ReadOnly;
                     _trace.Verbose($"Processing expansion for variable: '{name}'");
 
                     // This algorithm handles recursive replacement using a stack.
@@ -545,7 +567,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                                 }
 
                                 // Set the expanded value.
-                                expanded[state.Name] = new Variable(state.Name, state.Value, secret);
+                                expanded[state.Name] = new Variable(state.Name, state.Value, secret, readOnly);
                                 _trace.Verbose($"Set '{state.Name}' = '{state.Value}'");
                             }
 
@@ -589,6 +611,16 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             }
         }
 
+        private Boolean IsReadOnly(Variable variable)
+        {
+            if (variable.ReadOnly)
+            {
+                return true;
+            }
+
+            return Constants.Variables.ReadOnlyVariables.Contains(variable.Name, StringComparer.OrdinalIgnoreCase);
+        }
+
         private sealed class RecursionState
         {
             public RecursionState(string name, string value)
@@ -610,13 +642,15 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
         public string Name { get; private set; }
         public bool Secret { get; private set; }
         public string Value { get; private set; }
+        public bool ReadOnly { get; private set; }
 
-        public Variable(string name, string value, bool secret)
+        public Variable(string name, string value, bool secret, bool readOnly)
         {
             ArgUtil.NotNullOrEmpty(name, nameof(name));
             Name = name;
             Value = value ?? string.Empty;
             Secret = secret;
+            ReadOnly = readOnly;
         }
     }
 }
