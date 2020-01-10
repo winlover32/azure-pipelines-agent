@@ -50,6 +50,8 @@ namespace Agent.Sdk
             _environmentVariables = container.Environment != null ? new Dictionary<string, string>(container.Environment) : new Dictionary<string, string>();
             this.ContainerCommand = container.Properties.Get<string>("command", defaultValue: "");
             this.IsJobContainer = isJobContainer;
+            // Windows has never automatically enabled Docker.Sock, but Linux does. So we need to set the default here based on OS.
+            this.MapDockerSocket = container.Properties.Get<bool>("mapDockerSocket", !PlatformUtil.RunningOnWindows);
             this._imageOS = PlatformUtil.HostOS;
            _pathMappings = new Dictionary<string, string>( PlatformUtil.RunningOnWindows ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 
@@ -83,6 +85,7 @@ namespace Agent.Sdk
         public string CurrentUserName { get; set; }
         public string CurrentUserId { get; set; }
         public bool IsJobContainer { get; set; }
+        public bool MapDockerSocket { get; set; }
         public PlatformUtil.OS ImageOS {
             get
             {

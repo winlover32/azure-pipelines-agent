@@ -457,10 +457,11 @@ namespace Microsoft.VisualStudio.Services.Agent
                 pathMappings[this.GetDirectory(WellKnownDirectory.Tools)] = "/__t"; // Tool cache folder may come from ENV, so we need a unique folder to avoid collision
                 pathMappings[this.GetDirectory(WellKnownDirectory.Work)] = "/__w";
                 pathMappings[this.GetDirectory(WellKnownDirectory.Root)] = "/__a";
-                if (containerInfo.IsJobContainer)
-                {
-                    containerInfo.MountVolumes.Add(new MountVolume("/var/run/docker.sock", "/var/run/docker.sock"));
-                }
+            }
+
+            if (containerInfo.IsJobContainer && containerInfo.MapDockerSocket)
+            {
+                containerInfo.MountVolumes.Add(new MountVolume("/var/run/docker.sock", "/var/run/docker.sock"));
             }
 
             containerInfo.AddPathMappings(pathMappings);
