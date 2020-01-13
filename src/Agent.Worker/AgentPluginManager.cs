@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Text;
 using Microsoft.TeamFoundation.Framework.Common;
+using System.Runtime.Loader;
 
 namespace Microsoft.VisualStudio.Services.Agent.Worker
 {
@@ -25,35 +26,53 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
     {
         private readonly Dictionary<Guid, List<string>> _supportedTasks = new Dictionary<Guid, List<string>>();
 
-        private HashSet<string> _taskPlugins = new HashSet<string>();
+        private readonly HashSet<string> _taskPlugins = new HashSet<string>()
+        {
+            "Agent.Plugins.Repository.CheckoutTask, Agent.Plugins",
+            "Agent.Plugins.Repository.CleanupTask, Agent.Plugins",
+            "Agent.Plugins.PipelineArtifact.DownloadPipelineArtifactTask, Agent.Plugins",
+            "Agent.Plugins.PipelineArtifact.PublishPipelineArtifactTask, Agent.Plugins",
+            "Agent.Plugins.PipelineArtifact.PublishPipelineArtifactTaskV1, Agent.Plugins",
+            "Agent.Plugins.PipelineArtifact.DownloadPipelineArtifactTaskV1, Agent.Plugins",
+            "Agent.Plugins.PipelineArtifact.DownloadPipelineArtifactTaskV1_1_0, Agent.Plugins",
+            "Agent.Plugins.PipelineCache.SavePipelineCacheV0, Agent.Plugins",
+            "Agent.Plugins.PipelineCache.RestorePipelineCacheV0, Agent.Plugins",
+            "Agent.Plugins.PipelineArtifact.DownloadPipelineArtifactTaskV1_1_1, Agent.Plugins",
+            "Agent.Plugins.PipelineArtifact.DownloadPipelineArtifactTaskV1_1_2, Agent.Plugins",
+            "Agent.Plugins.PipelineArtifact.DownloadPipelineArtifactTaskV1_1_3, Agent.Plugins",
+            "Agent.Plugins.PipelineArtifact.DownloadPipelineArtifactTaskV2_0_0, Agent.Plugins",
+            "Agent.Plugins.PipelineArtifact.PublishPipelineArtifactTaskV0_140_0, Agent.Plugins"
+        };
 
         public override void Initialize(IHostContext hostContext)
         {
             base.Initialize(hostContext);
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            // Load task plugins
+            foreach (var pluginTypeName in _taskPlugins)
             {
-                if (assembly.FullName.StartsWith("Agent.Plugins", StringComparison.OrdinalIgnoreCase))
+                IAgentTaskPlugin taskPlugin = null;
+                AssemblyLoadContext.Default.Resolving += ResolveAssembly;
+                try
                 {
-                    foreach (var type in assembly.GetTypes())
-                    {
-                        if (typeof(IAgentTaskPlugin).IsAssignableFrom(type) && !type.IsInterface && !type.IsAbstract)
-                        {
-                            IAgentTaskPlugin taskPlugin = Activator.CreateInstance(type) as IAgentTaskPlugin;
-                            ArgUtil.NotNull(taskPlugin, nameof(taskPlugin));
-                            ArgUtil.NotNull(taskPlugin.Id, nameof(taskPlugin.Id));
-                            ArgUtil.NotNullOrEmpty(taskPlugin.Stage, nameof(taskPlugin.Stage));
-                            if (!_supportedTasks.ContainsKey(taskPlugin.Id))
-                            {
-                                _supportedTasks[taskPlugin.Id] = new List<string>();
-                            }
-
-                            Trace.Info($"Loaded task plugin id '{taskPlugin.Id}' ({taskPlugin.Stage}).");
-                            var pluginTypeName = $"{type.FullName}, {assembly.FullName.Split(',')[0]}";
-                            _taskPlugins.Add(pluginTypeName);
-                            _supportedTasks[taskPlugin.Id].Add(pluginTypeName);
-                        }
-                    }
+                    Trace.Info($"Load task plugin from '{pluginTypeName}'.");
+                    Type type = Type.GetType(pluginTypeName, throwOnError: true);
+                    taskPlugin = Activator.CreateInstance(type) as IAgentTaskPlugin;
                 }
+                finally
+                {
+                    AssemblyLoadContext.Default.Resolving -= ResolveAssembly;
+                }
+
+                ArgUtil.NotNull(taskPlugin, nameof(taskPlugin));
+                ArgUtil.NotNull(taskPlugin.Id, nameof(taskPlugin.Id));
+                ArgUtil.NotNullOrEmpty(taskPlugin.Stage, nameof(taskPlugin.Stage));
+                if (!_supportedTasks.ContainsKey(taskPlugin.Id))
+                {
+                    _supportedTasks[taskPlugin.Id] = new List<string>();
+                }
+
+                Trace.Info($"Loaded task plugin id '{taskPlugin.Id}' ({taskPlugin.Stage}).");
+                _supportedTasks[taskPlugin.Id].Add(pluginTypeName);
             }
         }
 
@@ -143,6 +162,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                                                   redirectStandardIn: redirectStandardIn,
                                                   cancellationToken: context.CancellationToken);
             }
+        }
+
+        private Assembly ResolveAssembly(AssemblyLoadContext context, AssemblyName assembly)
+        {
+            string assemblyFilename = assembly.Name + ".dll";
+            return context.LoadFromAssemblyPath(Path.Combine(HostContext.GetDirectory(WellKnownDirectory.Bin), assemblyFilename));
         }
     }
 }
