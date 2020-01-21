@@ -375,7 +375,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             }
 
             Trace.Info("Raising job completed event.");
-            var jobCompletedEvent = new JobCompletedEvent(message.RequestId, message.JobId, result);
+            var jobCompletedEvent = new JobCompletedEvent(message.RequestId, message.JobId, result,
+                jobContext.Variables.Get(Constants.Variables.Agent.RunMode) == Constants.Agent.CommandLine.Flags.Once);
 
             var completeJobRetryLimit = 5;
             var exceptions = new List<Exception>();

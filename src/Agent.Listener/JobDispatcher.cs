@@ -90,6 +90,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             if (runOnce)
             {
                 Trace.Info("Start dispatcher for one time used agent.");
+                jobRequestMessage.Variables[Constants.Variables.Agent.RunMode] = new VariableValue(Constants.Agent.CommandLine.Flags.Once);
                 newDispatch.WorkerDispatch = RunOnceAsync(jobRequestMessage, currentDispatch, newDispatch.WorkerCancellationTokenSource.Token, newDispatch.WorkerCancelTimeoutKillTokenSource.Token);
             }
             else

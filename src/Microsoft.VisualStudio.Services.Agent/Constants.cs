@@ -287,6 +287,7 @@ namespace Microsoft.VisualStudio.Services.Agent
                 public static readonly string RetainDefaultEncoding = "agent.retainDefaultEncoding";
                 public static readonly string ReadOnlyVariables = "agent.readOnlyVariables";
                 public static readonly string RootDirectory = "agent.RootDirectory";
+                public static readonly string RunMode = "agent.runMode";
                 public static readonly string ServerOMDirectory = "agent.ServerOMDirectory";
                 public static readonly string ServicePortPrefix = "agent.services";
                 public static readonly string SslCAInfo = "agent.cainfo";
@@ -450,6 +451,7 @@ namespace Microsoft.VisualStudio.Services.Agent
                 Agent.RetainDefaultEncoding,
                 Agent.ReadOnlyVariables,
                 Agent.RootDirectory,
+                Agent.RunMode,
                 Agent.ServerOMDirectory,
                 Agent.ServicePortPrefix,
                 Agent.SslCAInfo,
