@@ -152,7 +152,7 @@ function createIntegrationFiles(newRelease, callback)
         path.join(INTEGRATION_DIR, "InstallAgentPackage.xml"),
         newRelease
     );
-    var agentVersionPath=newRelease.replace('.', '-');
+    var agentVersionPath=newRelease.replace(/\./g, '-');
     var publishDir = path.join(INTEGRATION_DIR, "PublishVSTSAgent-" + agentVersionPath);
     fs.mkdirSync(publishDir, { recursive: true });
 
@@ -237,9 +237,9 @@ function commitADOConfigChange(directory, release)
     var gitUrl =  "https://mseng@dev.azure.com/mseng/AzureDevOps/_git/AzureDevOps.ConfigChange"
 
     cloneOrPull(directory, gitUrl);
-    var agentVersionPath=release.replace('.', '-');
+    var agentVersionPath=release.replace(/\./g, '-');
     var milestoneDir = "mXXX";
-    var tfsDir = path.join(directory + "tfs");
+    var tfsDir = path.join(directory, "tfs");
     if (fs.existsSync(tfsDir))
     {
         var dirs = fs.readdirSync(tfsDir, { withFileTypes: true })
