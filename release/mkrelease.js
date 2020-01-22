@@ -200,7 +200,7 @@ function cloneOrPull(directory, url)
     if (fs.existsSync(directory))
     {
         execInForeground(GIT + " checkout master", directory);
-        execInForeground(GIT + " pull", directory);
+        execInForeground(GIT + " pull --depth 1", directory);
     }
     else
     {
