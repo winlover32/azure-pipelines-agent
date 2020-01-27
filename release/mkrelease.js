@@ -11,7 +11,7 @@ const GIT_HUB_API_URL_ROOT="https://api.github.com/repos/microsoft/azure-pipelin
 
 var httpc = new httpm.HttpClient('vsts-node-api');
 
-process.env.EDITOR = process.env.EDITOR === undefined ? 'vi' : process.env.EDITOR;
+process.env.EDITOR = process.env.EDITOR === undefined ? 'code --wait' : process.env.EDITOR;
 
 var opt = require('node-getopt').create([
     ['',  'dryrun',               'Dry run only, do not actually commit new release'],
@@ -179,7 +179,7 @@ function execInForeground(command, directory)
 function commitAndPush(directory, release, branch)
 {
     execInForeground(GIT + " checkout -b " + branch, directory);
-    execInForeground(GIT + " commit -m 'Agent Release " + release + "' ", directory);
+    execInForeground(`${GIT} commit -m "Agent Release ${release}" `, directory);
     execInForeground(GIT + " push --set-upstream origin " + branch, directory);
 }
 
