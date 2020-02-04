@@ -82,7 +82,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                 Guid dispatchedJobId = _jobDispatchedQueue.Dequeue();
                 if (_jobInfos.TryGetValue(dispatchedJobId, out currentDispatch))
                 {
-                    Trace.Verbose($"Retrive previous WorkerDispather for job {currentDispatch.JobId}.");
+                    Trace.Verbose($"Retrieve previous WorkerDispather for job {currentDispatch.JobId}.");
                 }
             }
 
@@ -148,7 +148,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
                     {
                         Trace.Info($"Waiting WorkerDispather for job {currentDispatch.JobId} run to finish.");
                         await currentDispatch.WorkerDispatch;
-                        Trace.Info($"Job request {currentDispatch.JobId} processed succeed.");
+                        Trace.Info($"Job request {currentDispatch.JobId} processed successfully.");
                     }
                     catch (Exception ex)
                     {

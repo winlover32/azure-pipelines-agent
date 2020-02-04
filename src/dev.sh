@@ -157,15 +157,8 @@ function cmd_report ()
         exit -1
     fi
 
-    if ! command -v reportgenerator.exe > /dev/null; then 
-        echo "reportgenerator not installed."
-        echo "To install: "
-        echo "  % dotnet tool install --global dotnet-reportgenerator-globaltool"
-        exit -1
-    fi
-
     mkdir -p "$REPORT_DIR"
-    
+
     LATEST_COVERAGE_FILE=$(find "${SCRIPT_DIR}/Test/TestResults" -type f -name '*.coverage' -print0 | xargs -r -0 ls -1 -t | head -1)
 
     if [[ ("$LATEST_COVERAGE_FILE" == "") ]]; then
@@ -184,8 +177,15 @@ function cmd_report ()
         "${HOME}/.nuget/packages/microsoft.codecoverage/15.9.2/build/netstandard1.0/CodeCoverage/CodeCoverage.exe" analyze  "/output:coverage.xml" "$LATEST_COVERAGE_FILE"
         popd > /dev/null
 
+        if ! command -v reportgenerator.exe > /dev/null; then
+            echo "reportgenerator not installed. Skipping generation of HTML reports"
+            echo "To install: "
+            echo "  % dotnet tool install --global dotnet-reportgenerator-globaltool"
+            exit 0
+        fi
+
         echo "Generating HTML report"
-        reportgenerator.exe "-reports:$COVERAGE_XML_FILE" "-targetdir:$COVERAGE_REPORT_DIR/coveragereport"
+        reportgenerator.exe "-reports:$COVERAGE_XML_FILE" "-reporttypes:Html;Cobertura" "-targetdir:$COVERAGE_REPORT_DIR/coveragereport"
     fi
 }
 
