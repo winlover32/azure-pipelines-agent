@@ -323,6 +323,11 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             {
                 long requestId = message.RequestId;
                 Guid lockToken = Guid.Empty; // lockToken has never been used, keep this here of compat
+                // Because an agent can be idle for a long time between jobs, it is possible that in that time
+                // a firewall has closed the connection. For that reason, forcibly reestablish this connection at the
+                // start of a new job
+                var agentServer = HostContext.GetService<IAgentServer>();
+                await agentServer.RefreshConnectionAsync(AgentConnectionType.JobRequest, TimeSpan.FromSeconds(30));
 
                 // start renew job request
                 Trace.Info($"Start renew job request {requestId} for job {message.JobId}.");
