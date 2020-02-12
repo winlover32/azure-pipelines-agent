@@ -3,7 +3,7 @@ using System.Net;
 
 namespace Microsoft.VisualStudio.Services.Agent.Listener.Diagnostics
 {
-    class DnsTest : IDiagnostic
+    class DnsTest : IDiagnosticTest
     {
         public bool Execute(ITerminal terminal)
         {

@@ -2,7 +2,7 @@
 
 namespace Microsoft.VisualStudio.Services.Agent.Listener.Diagnostics
 {
-    class PingTest : IDiagnostic
+    class PingTest : IDiagnosticTest
     {
         public bool Execute(ITerminal terminal)
         {

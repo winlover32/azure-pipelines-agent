@@ -1,6 +1,6 @@
 ﻿namespace Microsoft.VisualStudio.Services.Agent.Listener.Diagnostics
 {
-    public interface IDiagnostic
+    public interface IDiagnosticTest
     {
         bool Execute(ITerminal terminal);
     }
