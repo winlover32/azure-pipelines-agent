@@ -121,16 +121,46 @@ function editReleaseNotesFile(body)
 {
     var releaseNotesFile = path.join(__dirname, '..', 'releaseNote.md');
     var existingReleaseNotes = fs.readFileSync(releaseNotesFile);
-    var newPRs = [];
+    var newPRs = { "Features": [], "Bugs": [], "Misc": [] };
     body.items.forEach(function (item) {
-        newPRs.push(' - ' + item.title + ' (#' + item.number + ')');
+        var category = "Misc";
+        item.labels.forEach(function (label) {
+            if (category)
+            {
+                if (label.name === "bug")
+                {
+                    category = "Bugs";
+                }
+                if (label.name === "enhancement")
+                {
+                    category = "Features";
+                }
+                if (label.name === "internal")
+                {
+                    category = null;
+                }
+            }
+        });
+        if (category)
+        {
+            newPRs[category].push(' - ' + item.title + ' (#' + item.number + ')');
+        }
     });
-    var newReleaseNotes = newPRs.join("\n") + "\n\n" + existingReleaseNotes;
+    var newReleaseNotes = "";
+    var categories = ["Features", "Bugs", "Misc"];
+    categories.forEach(function (category) {
+        newReleaseNotes += "## " + category + "\n" + newPRs[category].join("\n") + "\n\n";
+    });
+
+    newReleaseNotes += existingReleaseNotes;
     var editorCmd = process.env.EDITOR + ' ' + releaseNotesFile;
     console.log(editorCmd);
     if (opt.options.dryrun)
     {
         console.log("Found the following PRs = %o", newPRs);
+        console.log("\n\n");
+        console.log(newReleaseNotes);
+        console.log("\n");
     }
     else
     {
