@@ -1,6 +1,7 @@
 parameters:
   componentDetection: 'false'
   testLogTitle: 'Non-Windows'
+  enableADOLogIssue: 'false'
 
 steps:
 
@@ -18,6 +19,8 @@ steps:
 - script: ./dev.sh layout Release
   workingDirectory: src
   displayName: Build & Layout Release
+  env:
+    ADO_ENABLE_LOGISSUE: ${{ parameters.enableADOLogIssue }}
 
 # Run test
 - script: ./dev.sh test
