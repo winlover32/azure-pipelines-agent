@@ -9,10 +9,10 @@ pr:
 resources:
   containers:
   - container: dotnetcore_arm
-    image: huangtingluo/azure-pipelines-agent-eng:arm
+    image: azpagentinfra/arm:latest
 
   - container: dotnetcore_centos6
-    image: huangtingluo/azure-pipelines-agent-eng:centos6
+    image: azpagentinfra/centos6:latest
 
 jobs:
 
