@@ -43,7 +43,7 @@
       <Rule Id="CA1060" Action="Warning" />          <!-- Move pinvokes to native methods class -->
       <Rule Id="CA1061" Action="Error" />            <!-- Do not hide base class methods -->
       <Rule Id="CA1062" Action="Warning" />          <!-- Validate arguments of public methods -->
-      <Rule Id="CA1063" Action="Warning" />          <!-- Implement IDisposable Correctly -->
+      <Rule Id="CA1063" Action="Error" />            <!-- Implement IDisposable Correctly -->
       <Rule Id="CA1064" Action="Error" />            <!-- Exceptions should be public -->
       <Rule Id="CA1065" Action="Warning" />          <!-- Do not raise exceptions in unexpected locations -->
       <Rule Id="CA1066" Action="Error" />            <!-- Type {0} should implement IEquatable<T> because it overrides Equals -->
@@ -97,7 +97,7 @@
       <Rule Id="CA1827" Action="Warning" />          <!-- Do not use Count() or LongCount() when Any() can be used -->
       <Rule Id="CA1828" Action="Error" />            <!-- Do not use CountAsync() or LongCountAsync() when AnyAsync() can be used -->
       <Rule Id="CA1829" Action="Warning" />          <!-- Use Length/Count property instead of Count() when available -->
-      <Rule Id="CA2000" Action="Warning" />          <!-- Dispose objects before losing scope -->
+      <Rule Id="CA2000" Action="Error" />            <!-- Dispose objects before losing scope -->
       <Rule Id="CA2002" Action="Error" />            <!-- Do not lock on objects with weak identity -->
       <Rule Id="CA2007" Action="Hidden" />           <!-- Consider calling ConfigureAwait on the awaited task -->
       <Rule Id="CA2008" Action="Warning" />          <!-- Do not create tasks without passing a TaskScheduler -->
@@ -112,7 +112,7 @@
       <Rule Id="CA2207" Action="Error" />            <!-- Initialize value type static fields inline -->
       <Rule Id="CA2208" Action="Warning" />          <!-- Instantiate argument exceptions correctly -->
       <Rule Id="CA2211" Action="Warning" />          <!-- Non-constant fields should not be visible -->
-      <Rule Id="CA2213" Action="Warning" />          <!-- Disposable fields should be disposed -->
+      <Rule Id="CA2213" Action="Error" />            <!-- Disposable fields should be disposed -->
       <Rule Id="CA2214" Action="Error" />            <!-- Do not call overridable methods in constructors -->
       <Rule Id="CA2216" Action="Error" />            <!-- Disposable types should declare finalizer -->
       <Rule Id="CA2217" Action="Warning" />          <!-- Do not mark enums with FlagsAttribute -->

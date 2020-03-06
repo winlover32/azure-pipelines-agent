@@ -132,14 +132,16 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Release
         {
             try
             {
-                var connection = WorkerUtilities.GetVssConnection(executionContext);
-                var releaseServer = executionContext.GetHostContext().GetService<IReleaseServer>();
-                releaseServer.ConnectAsync(connection).GetAwaiter().GetResult();
+                using (var connection = WorkerUtilities.GetVssConnection(executionContext))
+                {
+                    var releaseServer = executionContext.GetHostContext().GetService<IReleaseServer>();
+                    releaseServer.ConnectAsync(connection).GetAwaiter().GetResult();
 
-                IList<AgentArtifactDefinition> releaseArtifacts = releaseServer.GetReleaseArtifactsFromService(ReleaseId, TeamProjectId).ToList();
-                IList<AgentArtifactDefinition> filteredReleaseArtifacts = FilterArtifactDefintions(releaseArtifacts);
-                filteredReleaseArtifacts.ToList().ForEach(x => Trace.Info($"Found Artifact = {x.Alias} of type {x.ArtifactType}"));
-                return filteredReleaseArtifacts;
+                    IList<AgentArtifactDefinition> releaseArtifacts = releaseServer.GetReleaseArtifactsFromService(ReleaseId, TeamProjectId).ToList();
+                    IList<AgentArtifactDefinition> filteredReleaseArtifacts = FilterArtifactDefintions(releaseArtifacts);
+                    filteredReleaseArtifacts.ToList().ForEach(x => Trace.Info($"Found Artifact = {x.Alias} of type {x.ArtifactType}"));
+                    return filteredReleaseArtifacts;
+                }
             }
             catch (Exception ex)
             {
