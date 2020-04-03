@@ -66,11 +66,36 @@ namespace Agent.Sdk.Knob
             new EnvironmentKnobSource("VSTS_HTTP_TIMEOUT"),
             new BuiltInDefaultKnobSource("100"));
 
+        public static readonly Knob HttpTrace = new Knob(
+            nameof(HttpTrace),
+            "Enable http trace if true",
+            new EnvironmentKnobSource("VSTS_AGENT_HTTPTRACE"),
+            new BuiltInDefaultKnobSource("false"));
+
+        public static readonly Knob AgentPerflog = new Knob(
+            nameof(AgentPerflog),
+            "If set, writes a perf counter trace for the agent. Writes to the location set in this variable.",
+            new EnvironmentKnobSource("VSTS_AGENT_PERFLOG"),
+            new BuiltInDefaultKnobSource(string.Empty));
+
+        public static readonly Knob AgentToolsDirectory = new Knob(
+            nameof(AgentToolsDirectory),
+            "The location to look for/create the agents tool cache",
+            new EnvironmentKnobSource("AGENT_TOOLSDIRECTORY"),
+            new EnvironmentKnobSource("agent.ToolsDirectory"),
+            new BuiltInDefaultKnobSource(string.Empty));
+
         public static readonly Knob PermissionsCheckFailsafe = new Knob(
             nameof(PermissionsCheckFailsafe),
             "Maximum depth of file permitted in directory hierarchy when checking permissions. Check to avoid accidentally entering infinite loops.",
             new EnvironmentKnobSource("AGENT_TEST_VALIDATE_EXECUTE_PERMISSIONS_FAILSAFE"),
             new BuiltInDefaultKnobSource("100"));
+
+        public static readonly Knob TraceVerbose = new Knob(
+            nameof(TraceVerbose),
+            "If set to anything, trace level will be verbose",
+            new EnvironmentKnobSource("VSTSAGENT_TRACE"),
+            new BuiltInDefaultKnobSource(string.Empty));
     }
 
 }
