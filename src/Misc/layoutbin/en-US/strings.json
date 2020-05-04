@@ -579,6 +579,8 @@
   "SvnSyncingRepo": "Syncing repository: {0} (Svn)",
   "TaskDownloadFailed": "Failed to download task '{0}'. Error {1}",
   "TaskDownloadTimeout": "Task '{0}' didn't finish download within {1} seconds.",
+  "TaskSignatureVerificationFailed": "Task signature verification failed.",
+  "TaskSignatureVerificationSucceeeded": "Task signature verification successful.",
   "TeeEula": [
     "Building sources from a TFVC repository requires accepting the Team Explorer Everywhere End User License Agreement. This step is not required for building sources from Git repositories.",
     "",
