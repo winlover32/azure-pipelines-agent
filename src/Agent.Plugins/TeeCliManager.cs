@@ -231,10 +231,10 @@ namespace Agent.Plugins.Repository
             await RunCommandAsync(FormatFlags.OmitCollectionUrl, "undo", "-recursive", localPath);
         }
 
-        public async Task UnshelveAsync(string shelveset)
+        public async Task UnshelveAsync(string shelveset, bool failOnNonZeroExitCode = true)
         {
             ArgUtil.NotNullOrEmpty(shelveset, nameof(shelveset));
-            await RunCommandAsync("unshelve", "-format:detailed", $"-workspace:{WorkspaceName}", shelveset);
+            await RunCommandAsync(FormatFlags.OmitCollectionUrl, false, failOnNonZeroExitCode, "unshelve", "-format:detailed", $"-workspace:{WorkspaceName}", shelveset);
         }
 
         public async Task WorkfoldCloakAsync(string serverPath)
