@@ -240,14 +240,14 @@ namespace Agent.Plugins.Repository
         public async Task WorkfoldCloakAsync(string serverPath)
         {
             ArgUtil.NotNullOrEmpty(serverPath, nameof(serverPath));
-            await RunCommandAsync("workfold", "-cloak", $"-workspace:{WorkspaceName}", serverPath);
+            await RunCommandAsync(3, "workfold", "-cloak", $"-workspace:{WorkspaceName}", serverPath);
         }
 
         public async Task WorkfoldMapAsync(string serverPath, string localPath)
         {
             ArgUtil.NotNullOrEmpty(serverPath, nameof(serverPath));
             ArgUtil.NotNullOrEmpty(localPath, nameof(localPath));
-            await RunCommandAsync("workfold", "-map", $"-workspace:{WorkspaceName}", serverPath, localPath);
+            await RunCommandAsync(3, "workfold", "-map", $"-workspace:{WorkspaceName}", serverPath, localPath);
         }
 
         public Task WorkfoldUnmapAsync(string serverPath)

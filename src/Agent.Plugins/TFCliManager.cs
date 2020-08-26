@@ -253,7 +253,7 @@ namespace Agent.Plugins.Repository
         public async Task WorkfoldCloakAsync(string serverPath)
         {
             ArgUtil.NotNullOrEmpty(serverPath, nameof(serverPath));
-            await RunCommandAsync("vc", "workfold", "/cloak", $"/workspace:{WorkspaceName}", serverPath);
+            await RunCommandAsync(3, "vc", "workfold", "/cloak", $"/workspace:{WorkspaceName}", serverPath);
         }
 
         public async Task WorkfoldMapAsync(string serverPath, string localPath)
