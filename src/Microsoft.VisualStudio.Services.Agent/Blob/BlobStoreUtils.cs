@@ -26,14 +26,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Blob
     /// </summary>
     public static class BlobStoreUtils
     {
-        public static async Task<(DedupIdentifier dedupId, ulong length)> UploadToBlobStore<T>(
+        public static async Task<(DedupIdentifier dedupId, ulong length)> UploadToBlobStore(
             bool verbose,
             string itemPath,
-            Func<TelemetryInformationLevel, Uri, string, T> telemetryRecordFactory,
+            Func<TelemetryInformationLevel, Uri, string, BlobStoreTelemetryRecord> telemetryRecordFactory,
             Action<string> traceOutput,
             DedupStoreClient dedupClient,
             BlobStoreClientTelemetry clientTelemetry,
-            CancellationToken cancellationToken) where T : BlobStoreTelemetryRecord
+            CancellationToken cancellationToken)
         {
             // Create chunks and identifier
             var chunk = await ChunkerHelper.CreateFromFileAsync(FileSystem.Instance, itemPath, cancellationToken, false);
@@ -49,13 +49,14 @@ namespace Microsoft.VisualStudio.Services.Agent.Blob
             var uploadSession = dedupClient.CreateUploadSession(keepUntilRef, tracer, FileSystem.Instance);
 
             // Upload the chunks
-            var uploadRecord = clientTelemetry.CreateRecord<T>(telemetryRecordFactory);
+            var uploadRecord = clientTelemetry.CreateRecord<BlobStoreTelemetryRecord>(telemetryRecordFactory);
             await clientTelemetry.MeasureActionAsync(
                 record: uploadRecord,
                 actionAsync: async () => await AsyncHttpRetryHelper.InvokeAsync(
                         async () =>
                         {
-                            return await uploadSession.UploadAsync(rootNode, new Dictionary<DedupIdentifier, string>(){ [dedupId] = itemPath }, cancellationToken);
+                            await uploadSession.UploadAsync(rootNode, new Dictionary<DedupIdentifier, string>(){ [dedupId] = itemPath }, cancellationToken);
+                            return uploadSession.UploadStatistics;
                         },
                         maxRetries: 3,
                         tracer: tracer,
@@ -64,20 +65,6 @@ namespace Microsoft.VisualStudio.Services.Agent.Blob
                         continueOnCapturedContext: false)
             );
             return (dedupId, rootNode.TransitiveContentBytes);
-        }
-
-        public static async Task<(DedupIdentifier dedupId, ulong length)> UploadToBlobStore<T>(
-            bool verbose,
-            string itemPath,
-            Func<TelemetryInformationLevel, Uri, string, T> telemetryRecordFactory,
-            Action<string> traceOutput,
-            VssConnection connection,
-            CancellationToken cancellationToken) where T : BlobStoreTelemetryRecord
-        {
-            var (dedupClient, clientTelemetry) = await DedupManifestArtifactClientFactory.Instance
-                    .CreateDedupClientAsync(verbose, traceOutput, connection, cancellationToken);
-
-            return await UploadToBlobStore<T>(verbose, itemPath, telemetryRecordFactory, traceOutput, dedupClient, clientTelemetry, cancellationToken);
         }
     }
 }

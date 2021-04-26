@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Agent.Sdk;
-using Agent.Sdk.Blob;
 using Agent.Plugins.PipelineArtifact.Telemetry;
 using BuildXL.Cache.ContentStore.Hashing;
 using Microsoft.TeamFoundation.Build.WebApi;

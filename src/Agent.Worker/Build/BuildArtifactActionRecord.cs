@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
-using Agent.Sdk.Blob;
+using Microsoft.VisualStudio.Services.Agent.Blob;
 using Microsoft.VisualStudio.Services.Content.Common.Telemetry;
 
 namespace Microsoft.VisualStudio.Services.Agent.Worker.Build

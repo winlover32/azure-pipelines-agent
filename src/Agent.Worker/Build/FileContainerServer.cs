@@ -15,12 +15,12 @@ using System.Diagnostics;
 using Microsoft.VisualStudio.Services.WebApi;
 using System.Net.Http;
 using System.Net;
-using Agent.Sdk.Blob;
 using BuildXL.Cache.ContentStore.Hashing;
+using Microsoft.TeamFoundation.DistributedTask.WebApi;
 using Microsoft.VisualStudio.Services.BlobStore.WebApi;
-using Microsoft.VisualStudio.Services.Content.Common;
-using Microsoft.VisualStudio.Services.BlobStore.Common;
+using Microsoft.VisualStudio.Services.Agent.Worker.Telemetry;
 using Microsoft.VisualStudio.Services.BlobStore.Common.Telemetry;
+using Microsoft.VisualStudio.Services.WebPlatform;
 
 namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
 {
@@ -32,7 +32,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
         private readonly FileContainerHttpClient _fileContainerHttpClient;
         private readonly VssConnection _connection;
         private DedupStoreClient _dedupClient;
-        private BlobStoreClientTelemetry _blobTelemetry;
+        private BlobStoreClientTelemetryTfs _blobTelemetry;
 
         private CancellationTokenSource _uploadCancellationTokenSource;
         private TaskCompletionSource<int> _uploadFinished;
@@ -204,6 +204,20 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
             _uploadFinished.TrySetResult(0);
             await uploadMonitor;
 
+            // report telemetry
+            if (uploadToBlob)
+            {
+                if (!Guid.TryParse(context.GetVariableValueOrDefault(WellKnownDistributedTaskVariables.PlanId), out var planId))
+                {
+                    planId = Guid.Empty;
+                }
+                if (!Guid.TryParse(context.GetVariableValueOrDefault(WellKnownDistributedTaskVariables.JobId), out var jobId))
+                {
+                    jobId = Guid.Empty;
+                }
+                await _blobTelemetry.CommitTelemetry(planId, jobId);
+            }
+
             return uploadResult;
         }
 
@@ -325,7 +339,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
         {
             var verbose = String.Equals(context.GetVariableValueOrDefault("system.debug"), "true", StringComparison.InvariantCultureIgnoreCase);
 
-            return await BlobStoreUtils.UploadToBlobStore<BuildArtifactActionRecord>(verbose, itemPath, (level, uri, type) =>
+            return await BlobStoreUtils.UploadToBlobStore(verbose, itemPath, (level, uri, type) =>
                 new BuildArtifactActionRecord(level, uri, type, nameof(UploadToBlobStore), context), (str) => context.Output(str), _dedupClient, _blobTelemetry, cancellationToken);
         }
 
