@@ -311,6 +311,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
             {
                 await RunAsync(message, previousJobDispatch, currentJobDispatch);
             }
+            catch (AggregateException e)
+            {
+                ExceptionsUtil.HandleAggregateException((AggregateException)e, Trace.Error);
+            }
             finally
             {
                 Trace.Info("Fire signal for one time used agent.");
@@ -659,6 +663,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Listener
 
                         // complete job request
                         await CompleteJobRequestAsync(_poolId, message, lockToken, resultOnAbandonOrCancel);
+                    }
+                    catch (AggregateException e)
+                    {
+                        ExceptionsUtil.HandleAggregateException((AggregateException)e, Trace.Error);
                     }
                     finally
                     {

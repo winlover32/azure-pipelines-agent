@@ -74,9 +74,12 @@ namespace Agent.PluginHost
                     {
                         ExceptionsUtil.HandleSocketException(ex, executionContext.VssConnection.Uri.ToString(), executionContext.Error);
                     }
+                    catch (AggregateException ex)
+                    {
+                        ExceptionsUtil.HandleAggregateException((AggregateException)ex, executionContext.Error);
+                    }
                     catch (Exception ex)
                     {
-                        // any exception throw from plugin will fail the task.
                         executionContext.Error(ex.Message);
                         executionContext.Debug(ex.StackTrace);
                     }

@@ -12,6 +12,16 @@ namespace Agent.Sdk.Util
 {
     public class ExceptionsUtil
     {
+        public static void HandleAggregateException(AggregateException e, Action<string> traceErrorAction)
+        {
+            traceErrorAction("One or several exceptions have been occurred.");
+
+            foreach (var ex in ((AggregateException)e).Flatten().InnerExceptions)
+            {
+                traceErrorAction(ex.ToString());
+            }
+        }
+        
         public static void HandleSocketException(SocketException e, string url, Action<string> traceErrorAction)
         {
             traceErrorAction("SocketException occurred.");
