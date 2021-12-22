@@ -1,4 +1,7 @@
-﻿using System;
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -226,8 +229,6 @@ namespace Agent.Plugins
 
             return filteredItems;
         }
-
-        // Clones MiniMatch options into separate object
 
         /// <summary>
         /// Creates copy of provided minimatcher options
