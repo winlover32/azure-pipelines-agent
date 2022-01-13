@@ -349,7 +349,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             {
                 return await GetEnvironmentContentWindows(agentId, agentName, steps);
             }
-            return GetEnvironmentContentNonWindows(agentId, agentName, steps);
+            return await GetEnvironmentContentNonWindows(agentId, agentName, steps);
         }
 
         private async Task<string> GetEnvironmentContentWindows(int agentId, string agentName, IList<Pipelines.JobStep> steps)
@@ -490,7 +490,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             return builder.ToString();
         }
 
-        private string GetEnvironmentContentNonWindows(int agentId, string agentName, IList<Pipelines.JobStep> steps)
+        private async Task<string> GetEnvironmentContentNonWindows(int agentId, string agentName, IList<Pipelines.JobStep> steps)
         {
             var builder = new StringBuilder();
 
@@ -499,6 +499,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             builder.AppendLine($"Agent Id: {agentId}");
             builder.AppendLine($"Agent Name: {agentName}");
             builder.AppendLine($"OS: {System.Runtime.InteropServices.RuntimeInformation.OSDescription}");
+            builder.AppendLine($"User groups: {await GetUserGroupsOnNonWindows()}");
             builder.AppendLine("Steps:");
 
             foreach (Pipelines.TaskStep task in steps.OfType<Pipelines.TaskStep>())
@@ -507,6 +508,47 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             }
 
             return builder.ToString();
+        }
+
+        /// <summary>
+        ///  Get user groups on a non-windows platform using core utility "id".
+        /// </summary>
+        /// <returns>Returns the string with user groups</returns>
+        private async Task<string> GetUserGroupsOnNonWindows()
+        {
+            var idUtil = WhichUtil.Which("id");
+            var stringBuilder = new StringBuilder();
+            try
+            {
+                using (var processInvoker = HostContext.CreateService<IProcessInvoker>())
+                {
+                    processInvoker.OutputDataReceived += (object sender, ProcessDataReceivedEventArgs mes) =>
+                    {
+                        stringBuilder.AppendLine(mes.Data);
+                    };
+                    processInvoker.ErrorDataReceived += (object sender, ProcessDataReceivedEventArgs mes) =>
+                    {
+                        stringBuilder.AppendLine(mes.Data);
+                    };
+
+                    await processInvoker.ExecuteAsync(
+                        workingDirectory: HostContext.GetDirectory(WellKnownDirectory.Bin),
+                        fileName: idUtil,
+                        arguments: "-nG",
+                        environment: null,
+                        requireExitCodeZero: false,
+                        outputEncoding: null,
+                        killProcessOnCancel: false,
+                        cancellationToken: default(CancellationToken)
+                    );
+                }
+            }
+            catch(Exception ex)
+            {
+                stringBuilder.AppendLine(ex.Message);
+            }
+
+            return stringBuilder.ToString();
         }
 
         // Collects Windows event logs that appeared during the job execution.
