@@ -212,7 +212,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             string resultName = $"cloudinit-{jobStartTimeUtc.ToString("yyyyMMdd-HHmmss")}-logs.tar.gz";
             string arguments = $"collect-logs -t \"{diagFolder}/{resultName}\"";
 
-            try 
+            try
             {
                 using (var processInvoker = HostContext.CreateService<IProcessInvoker>())
                 {
@@ -377,6 +377,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             // $psversiontable
             builder.AppendLine("Powershell Version Info:");
             builder.AppendLine(await GetPsVersionInfo());
+
+            builder.AppendLine(await GetLocalGroupMembership());
+
             return builder.ToString();
         }
 
@@ -436,6 +439,52 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     outputEncoding: null,
                     killProcessOnCancel: false,
                     cancellationToken: default(CancellationToken));
+            }
+
+            return builder.ToString();
+        }
+
+        /// <summary>
+        /// Gathers a list of local group memberships for the current user.
+        /// </summary>
+        private async Task<string> GetLocalGroupMembership()
+        {
+            var builder = new StringBuilder();
+
+            string powerShellExe = HostContext.GetService<IPowerShellExeUtil>().GetPath();
+
+            string scriptFile = Path.Combine(HostContext.GetDirectory(WellKnownDirectory.Bin), "powershell", "Get-LocalGroupMembership.ps1").Replace("'", "''");
+            ArgUtil.File(scriptFile, nameof(scriptFile));
+            string arguments = $@"-NoLogo -Sta -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -Command "". '{scriptFile}'""";
+
+            try
+            {
+                using (var processInvoker = HostContext.CreateService<IProcessInvoker>())
+                {
+                    processInvoker.OutputDataReceived += (object sender, ProcessDataReceivedEventArgs args) =>
+                    {
+                        builder.AppendLine(args.Data);
+                    };
+
+                    processInvoker.ErrorDataReceived += (object sender, ProcessDataReceivedEventArgs args) =>
+                    {
+                        builder.AppendLine(args.Data);
+                    };
+
+                    await processInvoker.ExecuteAsync(
+                        workingDirectory: HostContext.GetDirectory(WellKnownDirectory.Bin),
+                        fileName: powerShellExe,
+                        arguments: arguments,
+                        environment: null,
+                        requireExitCodeZero: false,
+                        outputEncoding: null,
+                        killProcessOnCancel: false,
+                        cancellationToken: default(CancellationToken));
+                }
+            }
+            catch (Exception ex)
+            {
+                builder.AppendLine(ex.Message);
             }
 
             return builder.ToString();
