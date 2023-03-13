@@ -290,6 +290,13 @@ namespace Agent.Sdk.Knob
             new RuntimeKnobSource("AGENT_ACKNOWLEDGE_NO_UPDATES"),
             new BuiltInDefaultKnobSource("false"));
 
+        public static readonly Knob AgentFailOnIncompatibleOS = new Knob(
+            nameof(AgentFailOnIncompatibleOS),
+            "Allow agent to fail pipelines on incampatible OS",
+            new EnvironmentKnobSource("AGENT_FAIL_ON_INCOMPATIBLE_OS"),
+            new RuntimeKnobSource("AGENT_FAIL_ON_INCOMPATIBLE_OS"),
+            new BuiltInDefaultKnobSource("false"));
+
         public static readonly Knob PermissionsCheckFailsafe = new Knob(
             nameof(PermissionsCheckFailsafe),
             "Maximum depth of file permitted in directory hierarchy when checking permissions. Check to avoid accidentally entering infinite loops.",
