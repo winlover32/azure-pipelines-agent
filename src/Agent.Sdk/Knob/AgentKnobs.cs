@@ -431,5 +431,11 @@ namespace Agent.Sdk.Knob
             new RuntimeKnobSource("AGENT_DISABLE_DRAIN_QUEUES_AFTER_TASK"),
             new EnvironmentKnobSource("AGENT_DISABLE_DRAIN_QUEUES_AFTER_TASK"),
             new BuiltInDefaultKnobSource("false"));
+            
+        public static readonly Knob EnableFetchingNet6List = new Knob(
+            nameof(EnableFetchingNet6List),
+            "Forces the agent to fetch list of .NET 6 supporting systems from server",
+            new EnvironmentKnobSource("AGENT_ENABLE_FETCHING_NET6_LIST"),
+            new BuiltInDefaultKnobSource("false"));
     }
 }

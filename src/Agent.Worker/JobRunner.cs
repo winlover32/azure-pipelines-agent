@@ -142,8 +142,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
                     }
                     catch (Exception ex)
                     {
+                        jobContext.Warning($"Error has occurred while checking if system supports .NET 6: {ex.Message}");
                         Trace.Error($"Error has occurred while checking if system supports .NET 6: {ex}");
-                        return await CompleteJobAsync(jobServer, jobContext, message, TaskResult.Failed);
 
                     }
                 }
