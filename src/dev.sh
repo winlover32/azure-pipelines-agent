@@ -65,7 +65,7 @@ function detect_platform_and_runtime_id ()
 
         if [ -e /etc/redhat-release ]; then
             local redhatRelease=$(</etc/redhat-release)
-            if [[ $redhatRelease == "CentOS release 7."* || $redhatRelease == "Red Hat Enterprise Linux Server release 7."* ]]; then
+            if [[ $redhatRelease == *"release 7."* ]]; then
                 DETECTED_RUNTIME_ID='rhel.7.2-x64'
             else
                 echo "RHEL supported only for version 7"
