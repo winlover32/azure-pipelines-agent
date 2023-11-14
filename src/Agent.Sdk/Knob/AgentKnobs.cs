@@ -159,11 +159,11 @@ namespace Agent.Sdk.Knob
             new EnvironmentKnobSource("AGENT_USE_NODE16"),
             new BuiltInDefaultKnobSource("false"));
 
-        public static readonly Knob UseNode20 = new Knob(
-            nameof(UseNode20),
+        public static readonly Knob UseNode20_1 = new Knob(
+            nameof(UseNode20_1),
             "Forces the agent to use Node 20 handler for all Node-based tasks",
-            new RuntimeKnobSource("AGENT_USE_NODE20"),
-            new EnvironmentKnobSource("AGENT_USE_NODE20"),
+            new RuntimeKnobSource("AGENT_USE_NODE20_1"),
+            new EnvironmentKnobSource("AGENT_USE_NODE20_1"),
             new BuiltInDefaultKnobSource("false"));
 
         public static readonly Knob UseNode20InUnsupportedSystem = new Knob(
