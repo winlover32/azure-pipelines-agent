@@ -54,12 +54,12 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
         private readonly INodeHandlerHelper nodeHandlerHelper;
         private const string nodeFolder = "node";
         private const string node10Folder = "node10";
-        private const string node16Folder = "node16";
-        private const string node20_1Folder = "node20_1";
-        private const string nodeLTS = node16Folder;
+        internal static readonly string Node16Folder = "node16";
+        internal static readonly string Node20_1Folder = "node20_1";
+        private static readonly string nodeLTS = Node16Folder;
         private const string useNodeKnobLtsKey = "LTS";
         private const string useNodeKnobUpgradeKey = "UPGRADE";
-        private string[] possibleNodeFolders = { nodeFolder, node10Folder, node16Folder, node20_1Folder };
+        private string[] possibleNodeFolders = { nodeFolder, node10Folder, Node16Folder, Node20_1Folder };
         private static Regex _vstsTaskLibVersionNeedsFix = new Regex("^[0-2]\\.[0-9]+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static string[] _extensionsNode6 ={
             "if (process.versions.node && process.versions.node.match(/^5\\./)) {",
@@ -238,17 +238,17 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
                              "Please upgrade the operating system of this host to ensure compatibility with Node20 tasks: " +
                              "https://github.com/nodesource/distributions");
                 Trace.Info($"Task.json has node20_1 handler data: {taskHasNode20_1Data}, but it's running in a unsupported system version. Using node16 for node tasks.");
-                nodeFolder = NodeHandler.node16Folder;
+                nodeFolder = NodeHandler.Node16Folder;
             }
             else if (taskHasNode20_1Data)
             {
                 Trace.Info($"Task.json has node20_1 handler data: {taskHasNode20_1Data}");
-                nodeFolder = NodeHandler.node20_1Folder;
+                nodeFolder = NodeHandler.Node20_1Folder;
             }
             else if (taskHasNode16Data)
             {
                 Trace.Info($"Task.json has node16 handler data: {taskHasNode16Data}");
-                nodeFolder = NodeHandler.node16Folder;
+                nodeFolder = NodeHandler.Node16Folder;
             }
             else if (taskHasNode10Data)
             {
@@ -266,17 +266,17 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Handlers
                              "Please upgrade the operating system of this host to ensure compatibility with Node20 tasks: " +
                              "https://github.com/nodesource/distributions");
                 Trace.Info($"Found UseNode20_1 knob, but it's running in a unsupported system version. Using node16 for node tasks.");
-                nodeFolder = NodeHandler.node16Folder;
+                nodeFolder = NodeHandler.Node16Folder;
             } 
             else if (useNode20_1) {
                 Trace.Info($"Found UseNode20_1 knob, using node20_1 for node tasks {useNode20_1}");
-                nodeFolder = NodeHandler.node20_1Folder;
+                nodeFolder = NodeHandler.Node20_1Folder;
             }
 
             if (useNode16)
             {
                 Trace.Info($"Found UseNode16 knob, using node16 for node tasks {useNode16}");
-                nodeFolder = NodeHandler.node16Folder;
+                nodeFolder = NodeHandler.Node16Folder;
             }
 
             if (useNode10)
