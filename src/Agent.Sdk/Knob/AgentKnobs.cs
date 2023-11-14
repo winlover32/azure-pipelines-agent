@@ -544,7 +544,7 @@ namespace Agent.Sdk.Knob
         public static readonly Knob CheckForTaskDeprecation = new Knob(
             nameof(CheckForTaskDeprecation),
             "If true, the agent will check in the 'Initialize job' step each task used in the job for task deprecation.",
-            new EnvironmentKnobSource("AZP_AGENT_CHECK_FOR_TASK_DEPRECATION"),
+            new RuntimeKnobSource("AZP_AGENT_CHECK_FOR_TASK_DEPRECATION"),
             new BuiltInDefaultKnobSource("false"));
 
         public static readonly Knob MountWorkspace = new Knob(

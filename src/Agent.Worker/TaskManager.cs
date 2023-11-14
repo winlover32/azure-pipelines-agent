@@ -77,7 +77,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
                 await DownloadAsync(executionContext, task);
 
-                if (AgentKnobs.CheckForTaskDeprecation.GetValue(UtilKnobValueContext.Instance()).AsBoolean())
+                if (AgentKnobs.CheckForTaskDeprecation.GetValue(executionContext).AsBoolean())
                 {
                     CheckForTaskDeprecation(executionContext, task);
                 }
