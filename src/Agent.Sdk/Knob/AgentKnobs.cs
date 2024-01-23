@@ -415,6 +415,13 @@ namespace Agent.Sdk.Knob
             new EnvironmentKnobSource("DISABLE_NODE6_DEPRECATION_WARNING"),
             new BuiltInDefaultKnobSource("true"));
 
+        public static readonly Knob DisableNode6Tasks = new Knob(
+            nameof(DisableNode6Tasks),
+            "Disables Node 6 tasks and Node 6 runner.",
+            new RuntimeKnobSource("AGENT_DISABLE_NODE6_TASKS"),
+            new EnvironmentKnobSource("AGENT_DISABLE_NODE6_TASKS"),
+            new BuiltInDefaultKnobSource("false"));
+       
         public static readonly Knob DisableTeePluginRemoval = new Knob(
             nameof(DisableTeePluginRemoval),
             "Disables removing TEE plugin after using it during checkout.",
